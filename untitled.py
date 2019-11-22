@@ -1,5 +1,5 @@
 
 import helix
 
-clips = helix.Twitch()
-print(clips.vod_data)
+clips = helix.Streamer("gronkh").follower()
+print(clips)
