@@ -10,6 +10,7 @@ from urllib.parse import urlencode
 class Twitch:
 	"""Twitch Class"""
 	def __init__(self):
+		self.vod_data = None
 		self.api = "https://api.twitch.tv/helix/"
 		self.headers = {'Client-ID': 'kimne78kx3ncx6brgo4mv6wki5h1ko'}
 
@@ -18,21 +19,34 @@ class Twitch:
 		#print(response.headers)
 		return response
 
-	#def search(self, after=None ,before=None, first=20, game_id=None, language=None, user_id=None, user_login=None):
 	def search(**kwargs):
-		'''Full Doc Compatible See https://dev.twitch.tv/docs/api/reference/#get-streams'''
+		''' Full Doc Compatible See https://dev.twitch.tv/docs/api/reference/#get-streams
+			after=None ,
+			before=None, 
+			first=20, 
+			game_id=None, 
+			language=None, 
+			user_id=None, 
+			user_login=None
+
+		'''
 		req = urlencode(kwargs)
 		res = Twitch().call_api("streams?{0}".format(req)).json()
 		return res
 
-	def get_game(self, game_id):
+	def search_vod():
+		''' seaches for vods and returns an id for the vod class '''
+		pass
+
+	def get_game(game_id):
+		''' gets the game name for a givean game id '''
 		game_data = Twitch().call_api("games?id={0}".format(game_id))
 		return game_data
 
 
 
 class Streamer(Twitch):
-	"""docstring for ClassName"""
+	"""docstring for Streamer"""
 	def __init__(self, name):
 		super(Streamer, self).__init__()
 		self.name = name
@@ -68,12 +82,15 @@ class Streamer(Twitch):
 	def clips(self):
 		"""Get Clips"""
 		self.clips = Twitch().call_api("clips?broadcaster_id={0}".format(self.user_id)).json()
-		return self.clips
+		return self.clips['data']
 
-	def vod(self):
-		"""Get VOD"""
-		self.vod = Twitch().call_api("videos?user_id={0}".format(self.user_id)).json()
-		return self.vod
+
+class Vod(Streamer):
+	"""The vod Class"""
+	def __init__(self, streamer):
+		super(Vod, self).__init__(streamer)
+		self.vod_data = Twitch().call_api("videos?user_id={0}".format(self.user_id)).json()
+		
 	
 
 class Stream(Streamer):
@@ -81,19 +98,18 @@ class Stream(Streamer):
 	def __init__(self, streamer):
 		super(Stream, self).__init__(streamer)
 		#get basic infos for Streams
-		stream_data = Twitch().call_api("streams?user_id={0}".format(self.user_id)).json()
-		self.stream_data = stream_data
+		self.stream_data = Twitch().call_api("streams?user_id={0}".format(self.user_id)).json()
 
-		if stream_data['data']:
-			self.stream_id = stream_data['data'][0]['id']
-			self.game_id = stream_data['data'][0]['game_id']
-			self.type = stream_data['data'][0]['type']
-			self.title = stream_data['data'][0]['title']
-			self.viewers = stream_data['data'][0]['viewer_count']
-			self.started_at = stream_data['data'][0]['started_at']
-			self.language = stream_data['data'][0]['language']
-			self.thumbnail_url = stream_data['data'][0]['thumbnail_url']
-			self.tag_ids = stream_data['data'][0]['tag_ids']
+		if self.stream_data['data']:
+			self.stream_id = self.stream_data['data'][0]['id']
+			self.game_id = self.stream_data['data'][0]['game_id']
+			self.type = self.stream_data['data'][0]['type']
+			self.title = self.stream_data['data'][0]['title']
+			self.viewers = self.stream_data['data'][0]['viewer_count']
+			self.started_at = self.stream_data['data'][0]['started_at']
+			self.language = self.stream_data['data'][0]['language']
+			self.thumbnail_url = self.stream_data['data'][0]['thumbnail_url']
+			self.tag_ids = self.stream_data['data'][0]['tag_ids']
 		else:
 			self.stream_id = "offline" 
 			self.game_id = "offline" 
