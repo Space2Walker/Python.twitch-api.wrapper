@@ -2,54 +2,54 @@
 # author: Space2Walker
 # 2019-10-18
 
-import requests
-import streamlink
 from urllib.parse import urlencode
 
+import requests
+import streamlink
 
-class Twitch:
-    """Twitch Class"""
-    # todo replace twitch class witch functions
-    def __init__(self):
-        self.api = "https://api.twitch.tv/helix/"
-        self.headers = {'Client-ID': 'kimne78kx3ncx6brgo4mv6wki5h1ko'}
-
-    def call_api(self, uri):
-        """
-        Call`s the Api https://api.twitch.tv/helix/uri
-        :param uri: str
-        :return: json object
-        """
-        response = requests.get(self.api + uri, headers=self.headers).json()
-        # print(response.headers)
-        return response
-
-    def search(self, **kwargs):
-        """
-        Full Doc Compatible See https://dev.twitch.tv/docs/api/reference/#get-streams
-        :param kwargs:
-        :return: json: Containing the Stream Info`s and PageKey
-        """
-
-        req = urlencode(kwargs)
-        res = Twitch().call_api("streams?{0}".format(req)).json()
-        return res
-
-    def search_vod(self):
-        """ searches for vods and returns an id for the vod class """
-        pass
-
-    def get_game(self, game_id):
-        """
-        Gets game info`s
-        :param game_id: str
-        :return: json containing the game data
-        """
-        game_data = Twitch().call_api("games?id={0}".format(game_id))
-        return game_data
+api = "https://api.twitch.tv/helix/"
+headers = {'Client-ID': 'kimne78kx3ncx6brgo4mv6wki5h1ko'}
 
 
-class Streamer(Twitch):
+def call_api(uri):
+    """
+    Call`s the Api https://api.twitch.tv/helix/uri
+    :param uri: str
+    :return: json object
+    """
+    response = requests.get(api + uri, headers=headers).json()
+    # print(response.headers)
+    return response
+
+
+def search(**kwargs):
+    """
+    Full Doc Compatible See https://dev.twitch.tv/docs/api/reference/#get-streams
+    :param kwargs:
+    :return: Stream Info`s and PageKey
+    """
+
+    req = urlencode(kwargs)
+    res = call_api("streams?{0}".format(req)).json()
+    return res
+
+
+def get_game(game_id):
+    """
+    Gets game info`s
+    :param game_id: str
+    :return: json containing the game data
+    """
+    game_data = call_api("games?id={0}".format(game_id))
+    return game_data
+
+
+def search_vod(self):
+    """ searches for vods and returns an id for the vod class """
+    pass
+
+
+class Streamer:
     """docstring for Streamer"""
 
     def __init__(self, name):
@@ -58,7 +58,7 @@ class Streamer(Twitch):
         self.url = 'twitch.tv/' + name
 
         # get basic info's for User
-        self.user_data = Twitch().call_api("users?login={0}".format(self.name))
+        self.user_data = call_api("users?login={0}".format(self.name))
 
         self.user_id = self.user_data['data'][0]['id']
         self.description = self.user_data['data'][0]['description']
@@ -69,7 +69,7 @@ class Streamer(Twitch):
 
     def follows(self, first=100, page=''):
         """Get the Users the Input is Following (Pagination)"""
-        follows = Twitch().call_api(
+        follows = call_api(
             "users/follows?from_id={0}&first={1}&after={2}".format(self.user_id, first, page))
         return follows
 
@@ -79,18 +79,18 @@ class Streamer(Twitch):
         :param page: str: The Pagination key for next call
         :return: json: A Json object containing Follower Info`s
         """
-        follower = Twitch().call_api(
+        follower = call_api(
             "users/follows?to_id={0}&first={1}&after={2}".format(self.user_id, str(first), page))
         return follower
 
     def extensions(self):
         """Get the Extensions used in Stream"""
-        extensions = Twitch().call_api("users/extensions?user_id={0}".format(self.user_id))
+        extensions = call_api("users/extensions?user_id={0}".format(self.user_id))
         return extensions
 
     def clips(self):
         """Get Clips"""
-        clips = Twitch().call_api("clips?broadcaster_id={0}".format(self.user_id))
+        clips = call_api("clips?broadcaster_id={0}".format(self.user_id))
         return clips['data']
 
 
@@ -99,14 +99,14 @@ class Vod(Streamer):
 
     def __init__(self, streamer):
         super(Vod, self).__init__(streamer)
-        self.vod_data = Twitch().call_api("videos?user_id={0}".format(self.user_id))
+        self.vod_data = call_api("videos?user_id={0}".format(self.user_id))
 
 
 class Stream(Streamer):
     def __init__(self, streamer):
         super(Stream, self).__init__(streamer)
         # get basic info`s of Stream
-        self.stream_data = Twitch().call_api("streams?user_id={0}".format(self.user_id))
+        self.stream_data = call_api("streams?user_id={0}".format(self.user_id))
 
         if self.stream_data['data']:
             self.stream_id = self.stream_data['data'][0]['id']
@@ -133,7 +133,7 @@ class Stream(Streamer):
         """
         Crawls the HLS Url
         :param res: 720p, 1080p and so on
-        :return: str The HLS URL
+        :return: str: The HLS URL
         """
         self.streams = streamlink.streams(self.url)
         self.stream = self.streams[res].url
@@ -141,7 +141,7 @@ class Stream(Streamer):
 
     def get_tags(self):
         """Get the Tags of the Stream"""
-        self.tags = Twitch().call_api("streams/tags?broadcaster_id={0}".format(self.user_id))
+        self.tags = call_api("streams/tags?broadcaster_id={0}".format(self.user_id))
         return self.tags['data']
 
 
