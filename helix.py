@@ -11,20 +11,22 @@ api = "https://api.twitch.tv/helix/"
 headers = {'Client-ID': 'kimne78kx3ncx6brgo4mv6wki5h1ko'}
 
 
+
 def call_api(uri):
     """
     Call`s the Api https://api.twitch.tv/helix/uri
+
     :param uri: str
     :return: json object
     """
     response = requests.get(api + uri, headers=headers).json()
-    # print(response.headers)
     return response
 
 
 def search(**kwargs):
     """
     Full Doc Compatible See https://dev.twitch.tv/docs/api/reference/#get-streams
+
     :param kwargs:
     :return: Stream Info`s and PageKey
     """
@@ -34,9 +36,15 @@ def search(**kwargs):
     return res
 
 
+def search_vod():
+    """ searches for VOD`s and returns an id for the VOD class """
+    pass
+
+
 def get_game(game_id):
     """
     Gets game info`s
+
     :param game_id: str
     :return: json containing the game data
     """
@@ -44,44 +52,69 @@ def get_game(game_id):
     return game_data
 
 
-def search_vod(self):
-    """ searches for vods and returns an id for the vod class """
-    pass
-
-
 class Streamer:
-    """docstring for Streamer"""
+    """A class containing the base Streamer info's
+       Makes 1 call to the API and extracting the following Info's
 
+       - user_id: The User ID, whitley used in the API
+       - name: The capitalized Streamer Name
+       - url: twitch.tv/$name
+       - description: The Channel Description
+       - partner: The Partner Status
+       - profile_image_url: Url of the Profile Image
+       - offline_image_url: The Url to the Image that is shown if the Stream is Offline
+       - total_views: The Total amount of Views the Channel has
+    """
     def __init__(self, name):
-        super(Streamer, self).__init__()
+        # get basic info's for User
+        user_data = call_api("users?login={0}".format(name))['data'][0]
+        self.user_id = user_data['id']
         self.name = name
         self.url = 'twitch.tv/' + name
+        self.description = user_data['description']
+        self.partner = user_data['broadcaster_type']
+        self.profile_image_url = user_data['profile_image_url']
+        self.offline_image_url = user_data['offline_image_url']
+        self.total_views = user_data['view_count']
 
-        # get basic info's for User
-        self.user_data = call_api("users?login={0}".format(self.name))
+        self.follows_page = ''
+        self.follower_page = ''
 
-        self.user_id = self.user_data['data'][0]['id']
-        self.description = self.user_data['data'][0]['description']
-        self.partner = self.user_data['data'][0]['broadcaster_type']
-        self.profile_image_url = self.user_data['data'][0]['profile_image_url']
-        self.offline_image_url = self.user_data['data'][0]['offline_image_url']
-        self.total_views = self.user_data['data'][0]['view_count']
+    def follows(self):
+        """Get the Users the Input is Following (Pagination)
 
-    def follows(self, first=100, page=''):
-        """Get the Users the Input is Following (Pagination)"""
+        :return: json: A Json object containing Follower Info`s
+        """
         follows = call_api(
-            "users/follows?from_id={0}&first={1}&after={2}".format(self.user_id, first, page))
-        return follows
+            "users/follows?from_id={0}&first=100&after={1}".format(self.user_id, self.follows_page))
 
-    def follower(self, first=20, page=''):
+        try:
+            if follows['pagination']['cursor']:
+                pass
+        except KeyError:
+            yield None
+
+        self.follows_page = follows['pagination']['cursor']
+        del follows['pagination']
+        yield follows
+
+    def follower(self):
         """ Get the Users that Following the Input(Pagination)
-        :param first: int: The Amount of followers per call max 200 default 20
-        :param page: str: The Pagination key for next call
+
         :return: json: A Json object containing Follower Info`s
         """
         follower = call_api(
-            "users/follows?to_id={0}&first={1}&after={2}".format(self.user_id, str(first), page))
-        return follower
+            "users/follows?to_id={0}&first=100&after={1}".format(self.user_id, self.follower_page))
+
+        try:
+            if follower['pagination']['cursor']:
+                pass
+        except KeyError:
+            yield None
+
+        self.follower_page = follower['pagination']['cursor']
+        del follower['pagination']
+        yield follower
 
     def extensions(self):
         """Get the Extensions used in Stream"""
@@ -102,7 +135,12 @@ class Vod(Streamer):
         self.vod_data = call_api("videos?user_id={0}".format(self.user_id))
 
 
+# noinspection PyAttributeOutsideInit
 class Stream(Streamer):
+    """A Class that representing the base Stats of a Stream
+
+    :param streamer: String with the url name of a streamer
+    """
     def __init__(self, streamer):
         super(Stream, self).__init__(streamer)
         # get basic info`s of Stream
@@ -132,6 +170,7 @@ class Stream(Streamer):
     def get_hls(self, res='best'):
         """
         Crawls the HLS Url
+
         :param res: 720p, 1080p and so on
         :return: str: The HLS URL
         """
@@ -143,22 +182,3 @@ class Stream(Streamer):
         """Get the Tags of the Stream"""
         self.tags = call_api("streams/tags?broadcaster_id={0}".format(self.user_id))
         return self.tags['data']
-
-
-# static-cdn.jtvnw.net/emoticons/v1/115390/1.0
-
-k_api = "https://api.twitch.tv/kraken/"
-k_headers = {'Client-ID': 'kimne78kx3ncx6brgo4mv6wki5h1ko'}
-
-
-def call_kraken(**kwargs):
-    """
-    Calls the Kraken API
-    :type kwargs: dict: see twitch reference
-    """
-    req = urlencode(kwargs)
-    response = requests.get(k_api + req, headers=k_headers)
-    # print(response.headers)
-    return response
-
-# e_set = call_api('chat/emoticon_images?emotesets=19151')
