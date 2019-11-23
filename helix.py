@@ -76,19 +76,35 @@ class Streamer:
         self.profile_image_url = user_data['profile_image_url']
         self.offline_image_url = user_data['offline_image_url']
         self.total_views = user_data['view_count']
-
+        self.total_follows = None
+        self.total_follower = None
         self.follows_page = ''
         self.follower_page = ''
 
-    def follows(self):
-        """Get the Users the Input is Following (Pagination)
+    def follows(self, direction):
+        """Iterates over the Users the Input is Following OR is Followed by
+        in a Json object containing 100 users each Iteration
 
-        :return: json: A Json object containing Follower Info`s
+        :param direction: Follow Direction "TO" Streamer "FROM" Streamer
+        :type direction: str
+        :return: Follower Info`s or None if Pool is empty
+        :rtype: list
         """
-        follows = call_api(
-            "users/follows?from_id={0}&first=100&after={1}".format(self.user_id, self.follows_page))
+        if direction != 'TO' and direction != 'TO':
+            raise TypeError('Direction must be "TO" or "FROM"')
+
+        if direction == 'TO':
+            follows = call_api(
+                "users/follows?from_id={0}&first=100&after={1}".format(self.user_id, self.follows_page))
+            self.total_follower = follows['total']
+
+        if direction == 'FROM':
+            follows = call_api(
+                "users/follows?to_id={0}&first=100&after={1}".format(self.user_id, self.follower_page))
+            self.total_follows = follows['total']
 
         try:
+            # noinspection PyUnboundLocalVariable
             if follows['pagination']['cursor']:
                 pass
         except KeyError:
@@ -96,25 +112,7 @@ class Streamer:
 
         self.follows_page = follows['pagination']['cursor']
         del follows['pagination']
-        yield follows
-
-    def follower(self):
-        """ Get the Users that Following the Input(Pagination)
-
-        :return: json: A Json object containing Follower Info`s
-        """
-        follower = call_api(
-            "users/follows?to_id={0}&first=100&after={1}".format(self.user_id, self.follower_page))
-
-        try:
-            if follower['pagination']['cursor']:
-                pass
-        except KeyError:
-            yield None
-
-        self.follower_page = follower['pagination']['cursor']
-        del follower['pagination']
-        yield follower
+        yield follows['data']
 
     def extensions(self):
         """Get the Extensions used in Stream"""
