@@ -1,8 +1,10 @@
 
 import helix
 
-streamer = helix.Streamer("lastmiles")
-print(list(streamer.follows('TO')))
+# streamer = helix.call_api("games?name=NHL+17&name=Redout")
+game = helix.get_games(game_name=['NHL 17', 'Redout'])
+# print(streamer)
+print(game)
 
 # x = 1
 # while x != 0:

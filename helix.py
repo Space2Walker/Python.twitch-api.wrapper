@@ -11,7 +11,6 @@ api = "https://api.twitch.tv/helix/"
 headers = {'Client-ID': 'kimne78kx3ncx6brgo4mv6wki5h1ko'}
 
 
-
 def call_api(uri):
     """
     Call`s the Api https://api.twitch.tv/helix/uri
@@ -19,8 +18,7 @@ def call_api(uri):
     :param uri: str
     :return: json object
     """
-    response = requests.get(api + uri, headers=headers).json()
-    return response
+    return requests.get(api + uri, headers=headers).json()
 
 
 def search(**kwargs):
@@ -30,10 +28,7 @@ def search(**kwargs):
     :param kwargs:
     :return: Stream Info`s and PageKey
     """
-
-    req = urlencode(kwargs)
-    res = call_api("streams?{0}".format(req)).json()
-    return res
+    return call_api("streams?{0}".format(urlencode(kwargs))).json()
 
 
 def search_vod():
@@ -41,29 +36,46 @@ def search_vod():
     pass
 
 
-def get_game(game_id):
+def get_game(game_id=None, game_name=None):
     """
     Gets game info`s
+    Only 1 Parameter Allowed, max 100 item per list, only one list
 
-    :param game_id: str
+    :param game_name: a list of EXACT game names to query
+    :type game_name: list
+    :param game_id: a list of game id`s to query
+    :type game_id: list
     :return: json containing the game data
+    :rtype: list
     """
-    game_data = call_api("games?id={0}".format(game_id))
-    return game_data
+    identifier = None
+    req = ''
+
+    if game_id:
+        identifier = 'id'
+
+    if game_name:
+        identifier = 'name'
+
+    for e in game_name:
+        tes = urlencode({identifier: str(e)})
+        req = req + tes + '&'
+
+    return call_api("games?{0}".format(req[:-1]))['data']
 
 
 class Streamer:
     """A class containing the base Streamer info's
-       Makes 1 call to the API and extracting the following Info's
+    Makes 1 call to the API and extracting the following Info's
 
-       - user_id: The User ID, whitley used in the API
-       - name: The capitalized Streamer Name
-       - url: twitch.tv/$name
-       - description: The Channel Description
-       - partner: The Partner Status
-       - profile_image_url: Url of the Profile Image
-       - offline_image_url: The Url to the Image that is shown if the Stream is Offline
-       - total_views: The Total amount of Views the Channel has
+    - .user_id: The User ID, whitley used in the API
+    - .name: The capitalized Streamer Name
+    - .url: twitch.tv/$name
+    - .description: The Channel Description
+    - .partner: The Partner Status
+    - .profile_image_url: Url of the Profile Image
+    - .offline_image_url: The Url to the Image that is shown if the Stream is Offline
+    - .total_views: The Total amount of Views the Channel has
     """
     def __init__(self, name):
         # get basic info's for User
@@ -76,53 +88,71 @@ class Streamer:
         self.profile_image_url = user_data['profile_image_url']
         self.offline_image_url = user_data['offline_image_url']
         self.total_views = user_data['view_count']
-        self.total_follows = None
-        self.total_follower = None
         self.follows_page = ''
         self.follower_page = ''
 
-    def follows(self, direction):
-        """Iterates over the Users the Input is Following OR is Followed by
-        in a Json object containing 100 users each Iteration
+    def follows(self, direction, total=False):
+        """Iterates over the Users the Input is Following
 
+        OR is Followed by
+        in a Json object containing 100 users each Iteration.
+
+        If Total is set to True returns the total followers as Type int instead.
+
+        :param total: Default False. If True returns Total follows
+        :type total: bool
         :param direction: Follow Direction "TO" Streamer "FROM" Streamer
         :type direction: str
-        :return: Follower Info`s or None if Pool is empty
+        :returns: Follower Info`s OR None if Pool is empty
         :rtype: list
         """
-        if direction != 'TO' and direction != 'TO':
+        follows = None
+        total_follows = None
+
+        if (direction != 'TO') and (direction != 'FROM'):
             raise TypeError('Direction must be "TO" or "FROM"')
 
         if direction == 'TO':
             follows = call_api(
                 "users/follows?from_id={0}&first=100&after={1}".format(self.user_id, self.follows_page))
-            self.total_follower = follows['total']
+            total_follows = follows['total']
+            self.follows_page = follows['pagination']['cursor']
 
         if direction == 'FROM':
             follows = call_api(
                 "users/follows?to_id={0}&first=100&after={1}".format(self.user_id, self.follower_page))
-            self.total_follows = follows['total']
+            total_follows = int(follows['total'])
+            self.follower_page = follows['pagination']['cursor']
+
+        if total is True:
+            return total_follows
 
         try:
-            # noinspection PyUnboundLocalVariable
             if follows['pagination']['cursor']:
                 pass
         except KeyError:
-            yield None
+            return None
 
-        self.follows_page = follows['pagination']['cursor']
         del follows['pagination']
-        yield follows['data']
+        return follows['data']
 
     def extensions(self):
-        """Get the Extensions used in Stream"""
-        extensions = call_api("users/extensions?user_id={0}".format(self.user_id))
-        return extensions
+        """Get the Active Extensions used by Streamer
 
-    def clips(self):
-        """Get Clips"""
-        clips = call_api("clips?broadcaster_id={0}".format(self.user_id))
-        return clips['data']
+        :returns: Streamers Active Extensions
+        :rtype: list
+        """
+        extensions = call_api("users/extensions?user_id={0}".format(self.user_id))['data']
+
+        e_index = []
+        for e in extensions:
+            for r in extensions[e]:
+                if (extensions[e][r]['active']) == True:
+                    del extensions[e][r]['active']
+                    e_index.append({e: extensions[e][r]})
+        return e_index
+
+    # todo badges and emotes
 
 
 class Vod(Streamer):
@@ -133,7 +163,15 @@ class Vod(Streamer):
         self.vod_data = call_api("videos?user_id={0}".format(self.user_id))
 
 
-# noinspection PyAttributeOutsideInit
+# class Clips(Streamer):
+# def clips(self):
+# todo make class for clips ?
+
+#     """Get Clips"""
+#     clips = call_api("clips?broadcaster_id={0}".format(self.user_id))
+#     return clips['data']
+
+
 class Stream(Streamer):
     """A Class that representing the base Stats of a Stream
 
@@ -172,11 +210,15 @@ class Stream(Streamer):
         :param res: 720p, 1080p and so on
         :return: str: The HLS URL
         """
-        self.streams = streamlink.streams(self.url)
-        self.stream = self.streams[res].url
-        return self.stream
+        streams = streamlink.streams(self.url)
+        stream = streams[res].url
+        return stream
 
     def get_tags(self):
         """Get the Tags of the Stream"""
-        self.tags = call_api("streams/tags?broadcaster_id={0}".format(self.user_id))
-        return self.tags['data']
+        tags = call_api("streams/tags?broadcaster_id={0}".format(self.user_id))
+        return tags['data']
+
+
+# Aliases
+get_games = get_game
