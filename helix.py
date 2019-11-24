@@ -28,11 +28,16 @@ def search(**kwargs):
     :param kwargs:
     :return: Stream Info`s and PageKey
     """
-    return call_api("streams?{0}".format(urlencode(kwargs))).json()
+    res = call_api("streams?{0}".format(urlencode(kwargs)))['data']
+    ret = []
+    for e in res:
+        ret.append(Stream(e['user_name'], self_init=False, **e))
+    return ret
 
 
 def search_vod():
     """ searches for VOD`s and returns an id for the VOD class """
+    # todo give function
     pass
 
 
@@ -62,6 +67,17 @@ def get_game(game_id=None, game_name=None):
         req = req + tes + '&'
 
     return call_api("games?{0}".format(req[:-1]))['data']
+
+
+def get_hls(url, res='best'):
+    """
+    Crawls the HLS Url
+    :param res: 720p, 1080p and so on
+    :return: str: The HLS URL
+    """
+    streams = streamlink.streams(url)
+    stream = streams[res].url
+    return stream
 
 
 class Streamer:
@@ -155,6 +171,52 @@ class Streamer:
     # todo badges and emotes
 
 
+class Stream(Streamer):
+    """A Class that representing the base Stats of a Stream
+
+    :param streamer: String with the url name of a streamer
+    """
+
+    def __init__(self, streamer, self_init=True, **kwargs):
+        if self_init:
+            super(Stream, self).__init__(streamer)
+            # get basic info`s of Stream
+            self.stream_data = call_api("streams?user_id={0}".format(self.user_id))['data'][0]
+
+            if self.stream_data['data']:
+                self.stream_id = self.stream_data['id']
+                self.game_id = self.stream_data['game_id']
+                self.type = self.stream_data['type']
+                self.title = self.stream_data['title']
+                self.viewers = self.stream_data['viewer_count']
+                self.started_at = self.stream_data['started_at']
+                self.language = self.stream_data['language']
+                self.thumbnail_url = self.stream_data['thumbnail_url']
+                self.tag_ids = self.stream_data['tag_ids']
+            else:
+                raise Exception("Stream offline cant get Info's")
+
+        if not self_init:
+            self.user_id = kwargs['user_id']
+            self.user_name = kwargs['user_name']
+            self.stream_id = kwargs['id']
+            self.game_id = kwargs['game_id']
+            self.type = kwargs['type']
+            self.title = kwargs['title']
+            self.viewers = kwargs['viewer_count']
+            self.started_at = kwargs['started_at']
+            self.language = kwargs['language']
+            self.thumbnail_url = kwargs['thumbnail_url']
+            self.tag_ids = kwargs['tag_ids']
+
+    def get_tags(self):
+        """Get the Tags of the Stream"""
+        tags = call_api("streams/tags?broadcaster_id={0}".format(self.user_id))
+        return tags['data']
+
+    # todo get_meta https://dev.twitch.tv/docs/api/reference#get-streams-metadata
+
+
 class Vod:
     """The vod Class
 
@@ -194,59 +256,11 @@ class Vod:
 
 # class Clip:
 # def clips(self):
-# todo make class for clips ?
+# todo make class clip ?
 
 #     """Get Clips"""
 #     clips = call_api("clips?broadcaster_id={0}".format(self.user_id))
 #     return clips['data']
-
-
-class Stream(Streamer):
-    """A Class that representing the base Stats of a Stream
-
-    :param streamer: String with the url name of a streamer
-    """
-    def __init__(self, streamer):
-        super(Stream, self).__init__(streamer)
-        # get basic info`s of Stream
-        self.stream_data = call_api("streams?user_id={0}".format(self.user_id))
-
-        if self.stream_data['data']:
-            self.stream_id = self.stream_data['data'][0]['id']
-            self.game_id = self.stream_data['data'][0]['game_id']
-            self.type = self.stream_data['data'][0]['type']
-            self.title = self.stream_data['data'][0]['title']
-            self.viewers = self.stream_data['data'][0]['viewer_count']
-            self.started_at = self.stream_data['data'][0]['started_at']
-            self.language = self.stream_data['data'][0]['language']
-            self.thumbnail_url = self.stream_data['data'][0]['thumbnail_url']
-            self.tag_ids = self.stream_data['data'][0]['tag_ids']
-        else:
-            self.stream_id = "offline"
-            self.game_id = "offline"
-            self.type = "offline"
-            self.title = "offline"
-            self.viewers = "offline"
-            self.started_at = "offline"
-            self.language = "offline"
-            self.thumbnail_url = "offline"
-            self.tag_ids = "offline"
-
-    def get_hls(self, res='best'):
-        """
-        Crawls the HLS Url
-
-        :param res: 720p, 1080p and so on
-        :return: str: The HLS URL
-        """
-        streams = streamlink.streams(self.url)
-        stream = streams[res].url
-        return stream
-
-    def get_tags(self):
-        """Get the Tags of the Stream"""
-        tags = call_api("streams/tags?broadcaster_id={0}".format(self.user_id))
-        return tags['data']
 
 
 # Aliases

@@ -2,10 +2,14 @@
 import helix
 
 # streamer = helix.call_api("games?name=NHL+17&name=Redout")
-game = helix.Vod('511802295')
+game = helix.search(language='de')
+for e in game:
+    print(e.user_name + "\n" + e.title)
 # print(streamer)
-print(game.title, game.type)
 
+
+# test = helix.Stream('lastmiles')
+# print(test.title)
 # x = 1
 # while x != 0:
 #
