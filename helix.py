@@ -155,15 +155,44 @@ class Streamer:
     # todo badges and emotes
 
 
-class Vod(Streamer):
-    """The vod Class"""
+class Vod:
+    """The vod Class
 
-    def __init__(self, streamer):
-        super(Vod, self).__init__(streamer)
-        self.vod_data = call_api("videos?user_id={0}".format(self.user_id))
+    - .vod_id: The VOD ID
+    - .user_id: The User ID, whitley used in the API
+    - .user_name: The capitalized Streamer Name
+    - .url: twitch.tv/videos/vod_id
+    - .title: The Stream Title
+    - .description: The VOD Description
+    - .created_at: Time the Vod was created
+    - .published_at: Time the Vod was published
+    - .thumbnail_url: Url of the Vod Thumbnail
+    - .viewable: is Public viewable or not
+    - .view_count: The view count of the VOD
+    - .language: The language the vod is in
+    - .type: Type of video. Valid values: "upload", "archive", "highlight".
+    - .duration: the duration of the Vod
+    """
+
+    def __init__(self, vod_id):
+        self.vod_data = call_api("videos?id={0}".format(vod_id))['data'][0]
+        self.vod_id = self.vod_data['id']
+        self.user_id = self.vod_data['user_id']
+        self.user_name = self.vod_data['user_name']
+        self.url = self.vod_data['url']
+        self.title = self.vod_data['title']
+        self.description = self.vod_data['description']
+        self.created_at = self.vod_data['created_at']
+        self.published_at = self.vod_data['published_at']
+        self.thumbnail_url = self.vod_data['thumbnail_url']
+        self.viewable = self.vod_data['viewable']
+        self.view_count = self.vod_data['view_count']
+        self.language = self.vod_data['language']
+        self.type = self.vod_data['type']
+        self.duration = self.vod_data['duration']
 
 
-# class Clips(Streamer):
+# class Clip:
 # def clips(self):
 # todo make class for clips ?
 

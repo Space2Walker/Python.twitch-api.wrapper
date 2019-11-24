@@ -2,9 +2,9 @@
 import helix
 
 # streamer = helix.call_api("games?name=NHL+17&name=Redout")
-game = helix.get_games(game_name=['NHL 17', 'Redout'])
+game = helix.Vod('511802295')
 # print(streamer)
-print(game)
+print(game.title, game.type)
 
 # x = 1
 # while x != 0:
