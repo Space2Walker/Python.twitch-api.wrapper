@@ -23,13 +23,17 @@ def call_api(uri):
 
 def search(identifier, **kwargs):
     """
-    Full Doc Compatible See https://dev.twitch.tv/docs/api/reference/#get-streams
+    Full Doc Compatible See
+    https://dev.twitch.tv/docs/api/reference/#get-streams
+    https://dev.twitch.tv/docs/api/reference/#get-videos
+    https://dev.twitch.tv/docs/api/reference/#get-clips
 
     :param identifier: 'STREAM' OR 'VOD' OR 'CLIP'
     :param kwargs: user_login=['gronkh', 'lastmiles'], user_id=[49112900]
     :return: Stream Class Object or list of Objects
     :rtype: collections.defaultlist or Stream
     """
+    # todo implement VOD and Clips
     req = ''
     ret = []
 
@@ -48,12 +52,6 @@ def search(identifier, **kwargs):
         for e in res:
             ret.append(Stream(e['user_name'], self_init=False, **e))
         return ret
-
-
-def search_vod():
-    """ searches for VOD`s and returns an id for the VOD class """
-    # todo give function
-    pass
 
 
 def get_game(game_id=None, game_name=None):
@@ -198,7 +196,7 @@ class Stream(Streamer):
             super(Stream, self).__init__(streamer)
             # get basic info`s of Stream
             self.stream_data = call_api("streams?user_id={0}".format(self.user_id))['data']
-            print(self.stream_data)
+
             try:
                 self.stream_id = self.stream_data[0]['id']
                 self.game_id = self.stream_data[0]['game_id']
