@@ -21,19 +21,33 @@ def call_api(uri):
     return requests.get(api + uri, headers=headers).json()
 
 
-def search(**kwargs):
+def search(identifier, **kwargs):
     """
     Full Doc Compatible See https://dev.twitch.tv/docs/api/reference/#get-streams
 
-    :param kwargs:
+    :param identifier: 'STREAM' OR 'VOD' OR 'CLIP'
+    :param kwargs: user_login=['gronkh', 'lastmiles'], user_id=[49112900]
     :return: Stream Class Object or list of Objects
     :rtype: collections.defaultlist or Stream
     """
-    res = call_api("streams?{0}".format(urlencode(kwargs)))['data']
+    req = ''
     ret = []
-    for e in res:
-        ret.append(Stream(e['user_name'], self_init=False, **e))
-    return ret
+
+    # get the kwargs keys and iterate
+    for e in kwargs.keys():
+        ''' goes over the list of values per key and makes a string 
+        user_login=gronkh&user_login=lastmiles&user_id=49112900&
+        where user_login is the key and "gronkh" and "lastmiles" are the values in the list of that key
+        '''
+        for val in kwargs[e]:
+            tes = urlencode({e: str(val)})
+            req = req + tes + '&'
+
+    if identifier == 'STREAM':
+        res = call_api("streams?{0}".format(req[:-1]))['data']
+        for e in res:
+            ret.append(Stream(e['user_name'], self_init=False, **e))
+        return ret
 
 
 def search_vod():
@@ -127,7 +141,6 @@ class Streamer:
         :returns: Follower Info`s OR None if Pool is empty
         :rtype: list
         """
-        # todo sometimes didn't rerun none if pool is empty
         follows = None
         total_follows = None
 
@@ -138,22 +151,22 @@ class Streamer:
             follows = call_api(
                 "users/follows?from_id={0}&first=100&after={1}".format(self.user_id, self.follows_page))
             total_follows = follows['total']
-            self.follows_page = follows['pagination']['cursor']
+            try:
+                self.follows_page = follows['pagination']['cursor']
+            except KeyError:
+                return None
 
         if direction == 'FROM':
             follows = call_api(
                 "users/follows?to_id={0}&first=100&after={1}".format(self.user_id, self.follower_page))
             total_follows = int(follows['total'])
-            self.follower_page = follows['pagination']['cursor']
+            try:
+                self.follower_page = follows['pagination']['cursor']
+            except KeyError:
+                return None
 
         if total is True:
             return total_follows
-
-        try:
-            if follows['pagination']['cursor']:
-                pass
-        except KeyError:
-            return None
 
         del follows['pagination']
         return follows['data']

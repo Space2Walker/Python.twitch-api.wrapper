@@ -2,8 +2,17 @@
 import helix
 
 # streamer = helix.call_api("games?name=NHL+17&name=Redout")
-game = helix.Streamer('r4yman').follows('TO')
-print(game)
+# game = helix.Streamer('r4yman')
+# print(game.follows('TO'))
+#
+# print(game.follows('TO'))
+
+test = helix.search('STREAM', user_login=['gronkh', 'lastmiles'], user_id=[49112900])
+print(test[0].user_name)
+
+# kwar = {'test': 123, 'use': 543}
+# for e in kwar.keys():
+#     print(e)
 
 # for e in game:
 #     print(e.user_name + "\n" + e.title)
