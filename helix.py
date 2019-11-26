@@ -13,7 +13,7 @@ headers = {'Client-ID': 'kimne78kx3ncx6brgo4mv6wki5h1ko'}
 
 def call_api(uri):
     """
-    Call`s the Api https://api.twitch.tv/helix/uri
+    Call`s the Api https://api.twitch.tv/helix/$uri
 
     :param uri: str
     :return: json object
@@ -26,7 +26,8 @@ def search(**kwargs):
     Full Doc Compatible See https://dev.twitch.tv/docs/api/reference/#get-streams
 
     :param kwargs:
-    :return: Stream Info`s and PageKey
+    :return: Stream Class Object or list of Objects
+    :rtype: collections.defaultlist or Stream
     """
     res = call_api("streams?{0}".format(urlencode(kwargs)))['data']
     ret = []
@@ -72,12 +73,16 @@ def get_game(game_id=None, game_name=None):
 def get_hls(url, res='best'):
     """
     Crawls the HLS Url
+    :param url: The Twitch video or Stream Url
     :param res: 720p, 1080p and so on
     :return: str: The HLS URL
     """
     streams = streamlink.streams(url)
     stream = streams[res].url
     return stream
+
+
+# todo top games method https://dev.twitch.tv/docs/api/reference#get-top-games
 
 
 class Streamer:
@@ -122,6 +127,7 @@ class Streamer:
         :returns: Follower Info`s OR None if Pool is empty
         :rtype: list
         """
+        # todo sometimes didn't rerun none if pool is empty
         follows = None
         total_follows = None
 
@@ -163,7 +169,7 @@ class Streamer:
         e_index = []
         for e in extensions:
             for r in extensions[e]:
-                if (extensions[e][r]['active']) == True:
+                if extensions[e][r]['active']:
                     del extensions[e][r]['active']
                     e_index.append({e: extensions[e][r]})
         return e_index
@@ -172,29 +178,27 @@ class Streamer:
 
 
 class Stream(Streamer):
-    """A Class that representing the base Stats of a Stream
-
-    :param streamer: String with the url name of a streamer
-    """
+    """A Class that representing the base Stats of a Stream"""
 
     def __init__(self, streamer, self_init=True, **kwargs):
         if self_init:
             super(Stream, self).__init__(streamer)
             # get basic info`s of Stream
-            self.stream_data = call_api("streams?user_id={0}".format(self.user_id))['data'][0]
+            self.stream_data = call_api("streams?user_id={0}".format(self.user_id))['data']
+            print(self.stream_data)
+            try:
+                self.stream_id = self.stream_data[0]['id']
+                self.game_id = self.stream_data[0]['game_id']
+                self.type = self.stream_data[0]['type']
+                self.title = self.stream_data[0]['title']
+                self.viewers = self.stream_data[0]['viewer_count']
+                self.started_at = self.stream_data[0]['started_at']
+                self.language = self.stream_data[0]['language']
+                self.thumbnail_url = self.stream_data[0]['thumbnail_url']
+                self.tag_ids = self.stream_data[0]['tag_ids']
 
-            if self.stream_data['data']:
-                self.stream_id = self.stream_data['id']
-                self.game_id = self.stream_data['game_id']
-                self.type = self.stream_data['type']
-                self.title = self.stream_data['title']
-                self.viewers = self.stream_data['viewer_count']
-                self.started_at = self.stream_data['started_at']
-                self.language = self.stream_data['language']
-                self.thumbnail_url = self.stream_data['thumbnail_url']
-                self.tag_ids = self.stream_data['tag_ids']
-            else:
-                raise Exception("Stream offline cant get Info's")
+            except IndexError:
+                self.type = "offline"
 
         if not self_init:
             self.user_id = kwargs['user_id']

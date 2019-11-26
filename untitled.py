@@ -2,9 +2,11 @@
 import helix
 
 # streamer = helix.call_api("games?name=NHL+17&name=Redout")
-game = helix.search(language='de')
-for e in game:
-    print(e.user_name + "\n" + e.title)
+game = helix.Streamer('r4yman').follows('TO')
+print(game)
+
+# for e in game:
+#     print(e.user_name + "\n" + e.title)
 # print(streamer)
 
 

@@ -42,7 +42,8 @@ for user in index:
 choice = int(input("Number ?")) - 1
 
 # play stream
-stream = index[choice].get_hls('720p')
+url = index[choice].url
+stream = helix.get_hls(url, '720p')
 
 command = ['vlc', stream, '--meta-title', index[choice].title]
 
