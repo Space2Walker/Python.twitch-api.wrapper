@@ -18,6 +18,7 @@ def call_api(uri):
     :param uri: str
     :return: json object
     """
+    # todo implement error handling and rate limiting
     return requests.get(api + uri, headers=headers).json()
 
 
@@ -33,9 +34,13 @@ def search(identifier, **kwargs):
     :return: Stream Class Object or list of Objects
     :rtype: collections.defaultlist or Stream
     """
-    # todo implement Clips
     req = ''
     ret = []
+
+    # stick to your naming convention twitch for god sake
+    if identifier.upper() == 'CLIPS':
+        # renames the dict Key
+        kwargs['broadcaster_id'] = kwargs.pop('user_id')
 
     # get the kwargs keys and iterate
     for e in kwargs.keys():
@@ -54,19 +59,19 @@ def search(identifier, **kwargs):
     except IndexError:
         raise Exception("NO DATA Your request didn't get any data back")
 
-    if identifier == 'STREAM':
+    if identifier.upper() == 'STREAM':
         for e in res:
             ret.append(Stream(e['user_name'], self_init=False, **e))
         return ret
 
-    if identifier == 'VIDEOS':
+    if identifier.upper() == 'VIDEOS':
         for e in res:
             ret.append(Vod(e['id'], self_init=False, **e))
         return ret
 
-    if identifier == 'CLIPS':
+    if identifier.upper() == 'CLIPS':
         for e in res:
-            ret.append(Stream(e['user_name'], self_init=False, **e))
+            ret.append(Clip(e['broadcaster_id'], self_init=False, **e))
         return ret
 
 
@@ -246,6 +251,7 @@ class Stream(Streamer):
         return tags['data']
 
     # todo get_meta https://dev.twitch.tv/docs/api/reference#get-streams-metadata
+    # uses its one rate limiting
 
 
 class Vod:
@@ -270,6 +276,7 @@ class Vod:
     def __init__(self, vod_id, self_init=True, **kwargs):
         if self_init:
             self.vod_data = call_api("videos?id={0}".format(vod_id))['data'][0]
+
             self.vod_id = self.vod_data['id']
             self.user_id = self.vod_data['user_id']
             self.user_name = self.vod_data['user_name']
@@ -286,9 +293,9 @@ class Vod:
             self.duration = self.vod_data['duration']
 
         if not self_init:
+            self.vod_id = vod_id
             self.user_id = kwargs['user_id']
             self.user_name = kwargs['user_name']
-            self.vod_id = kwargs['id']
             self.url = kwargs['url']
             self.title = kwargs['title']
             self.description = kwargs['description']
@@ -301,13 +308,60 @@ class Vod:
             self.type = kwargs['type']
             self.duration = kwargs['duration']
 
-# class Clip:
-# def clips(self):
-# todo make class clip ?
 
-#     """Get Clips"""
-#     clips = call_api("clips?broadcaster_id={0}".format(self.user_id))
-#     return clips['data']
+class Clip:
+    """ The Clip Class
+
+    .user_id        User ID of the stream from which the clip was created.
+    .user_name      Display name corresponding to user_id.
+    .created_at     Date when the clip was created.
+    .creator_id	    ID of the user who created the clip.
+    .creator_name   Display name corresponding to creator_id.
+    .embed_url      URL to embed the clip.
+    .game_id        ID of the game assigned to the stream when the clip was created.
+    .id	            ID of the clip being queried.
+    .language       Language of the stream from which the clip was created.
+    .thumbnail_url	string	URL of the clip thumbnail.
+    .title          Title of the clip.
+    .url            URL where the clip can be viewed.
+    .video_id       ID of the video from which the clip was created.
+    .view_count     Number of times the clip has been viewed.
+    """
+
+    def __init__(self, user_id, self_init=True, **kwargs):
+        if self_init:
+            self.clip_data = call_api("clips?broadcaster_id={0}".format(user_id))['data'][0]
+
+            self.user_id = user_id
+            self.user_name = self.clip_data['broadcaster_name']
+            self.created_at = self.clip_data['created_at']
+            self.creator_id = self.clip_data['creator_id']
+            self.creator_name = self.clip_data['creator_name']
+            self.embed_url = self.clip_data['embed_url']
+            self.game_id = self.clip_data['game_id']
+            self.id = self.clip_data['id']
+            self.language = self.clip_data['language']
+            self.thumbnail_url = self.clip_data['thumbnail_url']
+            self.title = self.clip_data['title']
+            self.url = self.clip_data['url']
+            self.video_id = self.clip_data['video_id']
+            self.view_count = self.clip_data['view_count']
+
+        if not self_init:
+            self.user_id = user_id
+            self.user_name = kwargs['broadcaster_name']
+            self.created_at = kwargs['created_at']
+            self.creator_id = kwargs['creator_id']
+            self.creator_name = kwargs['creator_name']
+            self.embed_url = kwargs['embed_url']
+            self.game_id = kwargs['game_id']
+            self.id = kwargs['id']
+            self.language = kwargs['language']
+            self.thumbnail_url = kwargs['thumbnail_url']
+            self.title = kwargs['title']
+            self.url = kwargs['url']
+            self.video_id = kwargs['video_id']
+            self.view_count = kwargs['view_count']
 
 
 # Aliases
