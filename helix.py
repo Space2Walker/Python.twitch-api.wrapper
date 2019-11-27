@@ -52,26 +52,26 @@ def search(identifier, **kwargs):
             tes = urlencode({e: str(val)})
             req = req + tes + '&'
 
-    res = call_api(f"{identifier.lower()}?{req[:-1]}")['data']
+    res = call_api(f"{identifier.lower()}?{req[:-1]}")
 
     try:
-        test = res[0]
-    except IndexError:
+        res['data'][0]
+    except (IndexError, KeyError):
         raise Exception("NO DATA Your request didn't get any data back")
 
     if identifier.upper() == 'STREAMS':
-        for e in res:
+        for e in res['data']:
             ret.append(Stream(e['user_name'], self_init=False, **e))
         return ret
 
     if identifier.upper() == 'VIDEOS':
-        for e in res:
+        for e in res['data']:
             ret.append(Vod(e['id'], self_init=False, **e))
         return ret
 
     if identifier.upper() == 'CLIPS':
-        for e in res:
-            ret.append(Clip(e['broadcaster_id'], self_init=False, **e))
+        for e in res['data']:
+            ret.append(Clip(e['id'], self_init=False, **e))
         return ret
 
 
@@ -119,19 +119,21 @@ def get_hls(url, res='best'):
 
 
 class Streamer:
-    """A class containing the base Streamer info's
-    Makes 1 call to the API and extracting the following Info's
-
-    - .user_id: The User ID, whitley used in the API
-    - .name: The capitalized Streamer Name
-    - .url: twitch.tv/$name
-    - .description: The Channel Description
-    - .partner: The Partner Status
-    - .profile_image_url: Url of the Profile Image
-    - .offline_image_url: The Url to the Image that is shown if the Stream is Offline
-    - .total_views: The Total amount of Views the Channel has
-    """
     def __init__(self, name):
+        """A class containing the base Streamer info's
+        Makes 1 call to the API and extracting the following Info's
+
+        - .user_id: The User ID, whitley used in the API
+        - .name: The capitalized Streamer Name
+        - .url: twitch.tv/$name
+        - .description: The Channel Description
+        - .partner: The Partner Status
+        - .profile_image_url: Url of the Profile Image
+        - .offline_image_url: The Url to the Image that is shown if the Stream is Offline
+        - .total_views: The Total amount of Views the Channel has
+
+        :param name: The Url-save Streamer Name
+        """
         # get basic info's for User
         user_data = call_api("users?login={0}".format(name))['data'][0]
         self.user_id = user_data['id']
@@ -210,9 +212,8 @@ class Streamer:
 
 
 class Stream(Streamer):
-    """A Class that representing the base Stats of a Stream"""
-
     def __init__(self, streamer, self_init=True, **kwargs):
+        """A Class that representing the base Stats of a Stream"""
         if self_init:
             super(Stream, self).__init__(streamer)
             # get basic info`s of Stream
@@ -255,26 +256,26 @@ class Stream(Streamer):
 
 
 class Vod:
-    # todo optional inherit from Streamer
-    """The vod Class
-
-    - .vod_id: The VOD ID
-    - .user_id: The User ID, whitley used in the API
-    - .user_name: The capitalized Streamer Name
-    - .url: twitch.tv/videos/vod_id
-    - .title: The Stream Title
-    - .description: The VOD Description
-    - .created_at: Time the Vod was created
-    - .published_at: Time the Vod was published
-    - .thumbnail_url: Url of the Vod Thumbnail
-    - .viewable: is Public viewable or not
-    - .view_count: The view count of the VOD
-    - .language: The language the vod is in
-    - .type: Type of video. Valid values: "upload", "archive", "highlight".
-    - .duration: the duration of the Vod
-    """
-
     def __init__(self, vod_id, self_init=True, **kwargs):
+        """The vod Class
+
+        - .vod_id: The VOD ID
+        - .user_id: The User ID, whitley used in the API
+        - .user_name: The capitalized Streamer Name
+        - .url: twitch.tv/videos/vod_id
+        - .title: The Stream Title
+        - .description: The VOD Description
+        - .created_at: Time the Vod was created
+        - .published_at: Time the Vod was published
+        - .thumbnail_url: Url of the Vod Thumbnail
+        - .viewable: is Public viewable or not
+        - .view_count: The view count of the VOD
+        - .language: The language the vod is in
+        - .type: Type of video. Valid values: "upload", "archive", "highlight".
+        - .duration: the duration of the Vod
+
+        :param vod_id: The Vod ID "513455174"
+        """
         if self_init:
             self.vod_data = call_api("videos?id={0}".format(vod_id))['data'][0]
 
@@ -311,37 +312,35 @@ class Vod:
 
 
 class Clip:
-    # todo optional inherit from Streamer
-    """ The Clip Class
+    def __init__(self, clip_id, self_init=True, **kwargs):
+        """ The Clip Class
 
-    .user_id        User ID of the stream from which the clip was created.
-    .user_name      Display name corresponding to user_id.
-    .created_at     Date when the clip was created.
-    .creator_id	    ID of the user who created the clip.
-    .creator_name   Display name corresponding to creator_id.
-    .embed_url      URL to embed the clip.
-    .game_id        ID of the game assigned to the stream when the clip was created.
-    .id	            ID of the clip being queried.
-    .language       Language of the stream from which the clip was created.
-    .thumbnail_url	string	URL of the clip thumbnail.
-    .title          Title of the clip.
-    .url            URL where the clip can be viewed.
-    .video_id       ID of the video from which the clip was created.
-    .view_count     Number of times the clip has been viewed.
-    """
-
-    def __init__(self, user_id, self_init=True, **kwargs):
+        .user_id        User ID of the stream from which the clip was created.
+        .user_name      Display name corresponding to user_id.
+        .created_at     Date when the clip was created.
+        .creator_id	    ID of the user who created the clip.
+        .creator_name   Display name corresponding to creator_id.
+        .embed_url      URL to embed the clip.
+        .game_id        ID of the game assigned to the stream when the clip was created.
+        .id	            ID of the clip being queried.
+        .language       Language of the stream from which the clip was created.
+        .thumbnail_url	string	URL of the clip thumbnail.
+        .title          Title of the clip.
+        .url            URL where the clip can be viewed.
+        .video_id       ID of the video from which the clip was created.
+        .view_count     Number of times the clip has been viewed.
+        """
         if self_init:
-            self.clip_data = call_api("clips?broadcaster_id={0}".format(user_id))['data'][0]
+            self.clip_data = call_api("clips?id={0}".format(clip_id))['data'][0]
 
-            self.user_id = user_id
+            self.clip_id = clip_id
+            self.user_id = self.clip_data['broadcaster_id']
             self.user_name = self.clip_data['broadcaster_name']
             self.created_at = self.clip_data['created_at']
             self.creator_id = self.clip_data['creator_id']
             self.creator_name = self.clip_data['creator_name']
             self.embed_url = self.clip_data['embed_url']
             self.game_id = self.clip_data['game_id']
-            self.id = self.clip_data['id']
             self.language = self.clip_data['language']
             self.thumbnail_url = self.clip_data['thumbnail_url']
             self.title = self.clip_data['title']
@@ -350,14 +349,14 @@ class Clip:
             self.view_count = self.clip_data['view_count']
 
         if not self_init:
-            self.user_id = user_id
+            self.clip_id = clip_id
+            self.user_id = kwargs['broadcaster_id']
             self.user_name = kwargs['broadcaster_name']
             self.created_at = kwargs['created_at']
             self.creator_id = kwargs['creator_id']
             self.creator_name = kwargs['creator_name']
             self.embed_url = kwargs['embed_url']
             self.game_id = kwargs['game_id']
-            self.id = kwargs['id']
             self.language = kwargs['language']
             self.thumbnail_url = kwargs['thumbnail_url']
             self.title = kwargs['title']

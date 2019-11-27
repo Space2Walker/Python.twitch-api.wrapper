@@ -7,8 +7,9 @@ import helix
 #
 # print(game.follows('TO'))
 
-test = helix.search('CLIPS', user_id=[49112900])
-print(test[0].embed_url)
+test = helix.search('VIDEOS')
+print(test[0].vod_id)
+
 
 # kwar = {'test': 123, 'use': 543}
 # for e in kwar.keys():
