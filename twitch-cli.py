@@ -16,7 +16,7 @@ n = 1
 # get info's
 # for user in abos:
 #     index.append(helix.Stream(user))
-index = helix.search('STREAM', user_login=abos)
+index = helix.search('STREAMS', user_login=abos)
 
 
 # sorting

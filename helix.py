@@ -59,7 +59,7 @@ def search(identifier, **kwargs):
     except IndexError:
         raise Exception("NO DATA Your request didn't get any data back")
 
-    if identifier.upper() == 'STREAM':
+    if identifier.upper() == 'STREAMS':
         for e in res:
             ret.append(Stream(e['user_name'], self_init=False, **e))
         return ret
@@ -255,6 +255,7 @@ class Stream(Streamer):
 
 
 class Vod:
+    # todo optional inherit from Streamer
     """The vod Class
 
     - .vod_id: The VOD ID
@@ -310,6 +311,7 @@ class Vod:
 
 
 class Clip:
+    # todo optional inherit from Streamer
     """ The Clip Class
 
     .user_id        User ID of the stream from which the clip was created.
