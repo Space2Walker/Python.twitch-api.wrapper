@@ -7,8 +7,8 @@ import helix
 #
 # print(game.follows('TO'))
 
-test = helix.search('STREAM', user_login=['gronkh', 'lastmiles'], user_id=[49112900])
-print(test[0].user_name)
+test = helix.search('VIDEOS', user_login=['lastmiles'], user_id=[49112900])
+print(test[0])
 
 # kwar = {'test': 123, 'use': 543}
 # for e in kwar.keys():

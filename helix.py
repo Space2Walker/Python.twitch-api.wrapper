@@ -28,12 +28,12 @@ def search(identifier, **kwargs):
     https://dev.twitch.tv/docs/api/reference/#get-videos
     https://dev.twitch.tv/docs/api/reference/#get-clips
 
-    :param identifier: 'STREAM' OR 'VOD' OR 'CLIP'
+    :param identifier: 'STREAMS' OR 'VIDEOS' OR 'CLIP'
     :param kwargs: user_login=['gronkh', 'lastmiles'], user_id=[49112900]
     :return: Stream Class Object or list of Objects
     :rtype: collections.defaultlist or Stream
     """
-    # todo implement VOD and Clips
+    # todo implement Clips
     req = ''
     ret = []
 
@@ -47,8 +47,24 @@ def search(identifier, **kwargs):
             tes = urlencode({e: str(val)})
             req = req + tes + '&'
 
+    res = call_api(f"{identifier.lower()}?{req[:-1]}")['data']
+
+    try:
+        test = res[0]
+    except IndexError:
+        raise Exception("NO DATA Your request didn't get any data back")
+
     if identifier == 'STREAM':
-        res = call_api("streams?{0}".format(req[:-1]))['data']
+        for e in res:
+            ret.append(Stream(e['user_name'], self_init=False, **e))
+        return ret
+
+    if identifier == 'VIDEOS':
+        for e in res:
+            ret.append(Vod(e['id'], self_init=False, **e))
+        return ret
+
+    if identifier == 'CLIPS':
         for e in res:
             ret.append(Stream(e['user_name'], self_init=False, **e))
         return ret
@@ -251,23 +267,39 @@ class Vod:
     - .duration: the duration of the Vod
     """
 
-    def __init__(self, vod_id):
-        self.vod_data = call_api("videos?id={0}".format(vod_id))['data'][0]
-        self.vod_id = self.vod_data['id']
-        self.user_id = self.vod_data['user_id']
-        self.user_name = self.vod_data['user_name']
-        self.url = self.vod_data['url']
-        self.title = self.vod_data['title']
-        self.description = self.vod_data['description']
-        self.created_at = self.vod_data['created_at']
-        self.published_at = self.vod_data['published_at']
-        self.thumbnail_url = self.vod_data['thumbnail_url']
-        self.viewable = self.vod_data['viewable']
-        self.view_count = self.vod_data['view_count']
-        self.language = self.vod_data['language']
-        self.type = self.vod_data['type']
-        self.duration = self.vod_data['duration']
+    def __init__(self, vod_id, self_init=True, **kwargs):
+        if self_init:
+            self.vod_data = call_api("videos?id={0}".format(vod_id))['data'][0]
+            self.vod_id = self.vod_data['id']
+            self.user_id = self.vod_data['user_id']
+            self.user_name = self.vod_data['user_name']
+            self.url = self.vod_data['url']
+            self.title = self.vod_data['title']
+            self.description = self.vod_data['description']
+            self.created_at = self.vod_data['created_at']
+            self.published_at = self.vod_data['published_at']
+            self.thumbnail_url = self.vod_data['thumbnail_url']
+            self.viewable = self.vod_data['viewable']
+            self.view_count = self.vod_data['view_count']
+            self.language = self.vod_data['language']
+            self.type = self.vod_data['type']
+            self.duration = self.vod_data['duration']
 
+        if not self_init:
+            self.user_id = kwargs['user_id']
+            self.user_name = kwargs['user_name']
+            self.vod_id = kwargs['id']
+            self.url = kwargs['url']
+            self.title = kwargs['title']
+            self.description = kwargs['description']
+            self.created_at = kwargs['created_at']
+            self.published_at = kwargs['published_at']
+            self.thumbnail_url = kwargs['thumbnail_url']
+            self.viewable = kwargs['viewable']
+            self.view_count = kwargs['view_count']
+            self.language = kwargs['language']
+            self.type = kwargs['type']
+            self.duration = kwargs['duration']
 
 # class Clip:
 # def clips(self):
