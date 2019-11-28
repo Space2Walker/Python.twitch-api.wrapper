@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # author: Space2Walker
-# 2019-10-18
+# 2019-11-28
 """The Twitch Module
 
 Functions:
@@ -20,11 +20,10 @@ Classes:
 
 
 """
-
-from urllib.parse import urlencode
-
 import requests
 import streamlink
+
+from helper import kwargs_to_query
 
 api = "https://api.twitch.tv/helix/"
 headers = {'Client-ID': 'kimne78kx3ncx6brgo4mv6wki5h1ko'}
@@ -63,16 +62,9 @@ def search(identifier, **kwargs):
         kwargs['broadcaster_id'] = kwargs.pop('user_id')
 
     # get the kwargs keys and iterate
-    for e in kwargs.keys():
-        ''' goes over the list of values per key and makes a string 
-        user_login=gronkh&user_login=lastmiles&user_id=49112900&
-        where user_login is the key and "gronkh" and "lastmiles" are the values in the list of that key
-        '''
-        for val in kwargs[e]:
-            tes = urlencode({e: str(val)})
-            req = req + tes + '&'
+    req = kwargs_to_query(kwargs)
 
-    res = call_api(f"{identifier.lower()}?{req[:-1]}")
+    res = call_api(f"{identifier.lower()}?{req}")
 
     try:
         res['data'][0]
@@ -107,33 +99,19 @@ def get_hls(url, res='best'):
     return stream
 
 
-def get_game(game_id=None, game_name=None):
+def get_game(**kwargs):
     """
     Gets game info`s
-    Only 1 Parameter Allowed, max 100 item per list, only one list
+    Only 1 Parameter Allowed, max 100 item per list
+    Input id OR name
 
-    :param game_name: a list of EXACT game names to query
-    :type game_name: list
-    :param game_id: a list of game id`s to query
-    :type game_id: list
+    :param name: a list of EXACT game names to query
+    :param id: a list of game id`s to query
     :return: json containing the game data
     :rtype: list
     """
-    # todo rework to take a combination of input like search and remove urlencode dependency
-    identifier = None
-    req = ''
-
-    if game_id:
-        identifier = 'id'
-
-    if game_name:
-        identifier = 'name'
-
-    for e in game_name:
-        tes = urlencode({identifier: str(e)})
-        req = req + tes + '&'
-
-    return call_api("games?{0}".format(req[:-1]))['data']
+    req = kwargs_to_query(kwargs)
+    return call_api(f"games?{req}")['data']
 
 
 def get_top_games(first=100):
