@@ -7,10 +7,17 @@ import helix
 #
 # print(game.follows('TO'))
 
-test = helix.search('VIDEOS')
-print(test[0].vod_id)
+# test = helix.search('Streams', first=['100'])
+# for stream in test:
+#     print(stream.user_name, stream.title, stream.viewers)
 
-
+miles = helix.Streamer('lastmiles')
+while True:
+    followers = miles.follows('FROM')
+    if followers is None:
+        break
+    for follower in followers:
+        print(follower['from_name'])
 # kwar = {'test': 123, 'use': 543}
 # for e in kwar.keys():
 #     print(e)

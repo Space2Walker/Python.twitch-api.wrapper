@@ -1,6 +1,25 @@
 #!/usr/bin/env python3
 # author: Space2Walker
 # 2019-10-18
+"""The Twitch Module
+
+Functions:
+
+- call_api()
+- search()
+- get_hls()
+- get_game()
+- get_top_games()
+
+Classes:
+
+- Streamer()
+- Stream()
+- Vod()
+- Clip()
+
+
+"""
 
 from urllib.parse import urlencode
 
@@ -34,6 +53,7 @@ def search(identifier, **kwargs):
     :return: Stream Class Object or list of Objects
     :rtype: collections.defaultlist or Stream
     """
+    # todo check input and make lists for all kwargs and int to string
     req = ''
     ret = []
 
@@ -75,6 +95,18 @@ def search(identifier, **kwargs):
         return ret
 
 
+def get_hls(url, res='best'):
+    """
+    Crawls the HLS Url
+    :param url: The Twitch video or Stream Url
+    :param res: 720p, 1080p and so on
+    :return: str: The HLS URL
+    """
+    streams = streamlink.streams(url)
+    stream = streams[res].url
+    return stream
+
+
 def get_game(game_id=None, game_name=None):
     """
     Gets game info`s
@@ -103,19 +135,18 @@ def get_game(game_id=None, game_name=None):
     return call_api("games?{0}".format(req[:-1]))['data']
 
 
-def get_hls(url, res='best'):
-    """
-    Crawls the HLS Url
-    :param url: The Twitch video or Stream Url
-    :param res: 720p, 1080p and so on
-    :return: str: The HLS URL
-    """
-    streams = streamlink.streams(url)
-    stream = streams[res].url
-    return stream
+def get_top_games(first=100):
+    """ Get the most Played Games/Categories
+    https://dev.twitch.tv/docs/api/reference#get-top-games
 
+    :param first: The amount of objects per Call
+    :type first: int
+    :return: A List of Dicts Containing Game Info`s
+    :rtype: list
+    """
 
-# todo top games method https://dev.twitch.tv/docs/api/reference#get-top-games
+    top_games = call_api(f"games/top?first={str(first)}")['data']
+    return top_games
 
 
 class Streamer:
@@ -135,7 +166,7 @@ class Streamer:
         :param name: The Url-save Streamer Name
         """
         # get basic info's for User
-        user_data = call_api("users?login={0}".format(name))['data'][0]
+        user_data = call_api(f"users?login={name}")['data'][0]
         self.user_id = user_data['id']
         self.name = name
         self.url = 'twitch.tv/' + name
@@ -162,6 +193,7 @@ class Streamer:
         :returns: Follower Info`s OR None if Pool is empty
         :rtype: list
         """
+        # todo make class for follower
         follows = None
         total_follows = None
 
