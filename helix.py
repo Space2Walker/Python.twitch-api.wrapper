@@ -119,6 +119,7 @@ def get_game(game_id=None, game_name=None):
     :return: json containing the game data
     :rtype: list
     """
+    # todo rework to take a combination of input like search and remove urlencode dependency
     identifier = None
     req = ''
 
@@ -178,7 +179,7 @@ class Streamer:
         self.follows_page = ''
         self.follower_page = ''
 
-    def follows(self, direction, total=False):
+    def follows(self, direction, total=False, first=100):
         """Iterates over the Users the Input is Following
 
         OR is Followed by
@@ -186,10 +187,12 @@ class Streamer:
 
         If Total is set to True returns the total followers as Type int instead.
 
-        :param total: Default False. If True returns Total follows
-        :type total: bool
         :param direction: Follow Direction "TO" Streamer "FROM" Streamer
         :type direction: str
+        :param total: Default False. If True returns Total follows
+        :type total: bool
+        :param first: Amount of Followers per Querry
+        :type first; int
         :returns: Follower Info`s OR None if Pool is empty
         :rtype: list
         """
@@ -202,7 +205,7 @@ class Streamer:
 
         if direction == 'TO':
             follows = call_api(
-                "users/follows?from_id={0}&first=100&after={1}".format(self.user_id, self.follows_page))
+                f"users/follows?from_id={self.user_id}&first={str(first)}&after={self.follows_page}")
             total_follows = follows['total']
             try:
                 self.follows_page = follows['pagination']['cursor']
@@ -211,7 +214,7 @@ class Streamer:
 
         if direction == 'FROM':
             follows = call_api(
-                "users/follows?to_id={0}&first=100&after={1}".format(self.user_id, self.follower_page))
+                f"users/follows?to_id={self.user_id}&first={str(first)}&after={self.follower_page}")
             total_follows = int(follows['total'])
             try:
                 self.follower_page = follows['pagination']['cursor']
@@ -230,7 +233,7 @@ class Streamer:
         :returns: Streamers Active Extensions
         :rtype: list
         """
-        extensions = call_api("users/extensions?user_id={0}".format(self.user_id))['data']
+        extensions = call_api(f"users/extensions?user_id={self.user_id}")['data']
 
         e_index = []
         for e in extensions:
@@ -249,7 +252,7 @@ class Stream(Streamer):
         if self_init:
             super(Stream, self).__init__(streamer)
             # get basic info`s of Stream
-            self.stream_data = call_api("streams?user_id={0}".format(self.user_id))['data']
+            self.stream_data = call_api(f"streams?user_id={self.user_id}")['data']
 
             try:
                 self.stream_id = self.stream_data[0]['id']
@@ -280,7 +283,7 @@ class Stream(Streamer):
 
     def get_tags(self):
         """Get the Tags of the Stream"""
-        tags = call_api("streams/tags?broadcaster_id={0}".format(self.user_id))
+        tags = call_api(f"streams/tags?broadcaster_id={self.user_id}")
         return tags['data']
 
     # todo get_meta https://dev.twitch.tv/docs/api/reference#get-streams-metadata
@@ -309,7 +312,7 @@ class Vod:
         :param vod_id: The Vod ID "513455174"
         """
         if self_init:
-            self.vod_data = call_api("videos?id={0}".format(vod_id))['data'][0]
+            self.vod_data = call_api(f"videos?id={vod_id}")['data'][0]
 
             self.vod_id = self.vod_data['id']
             self.user_id = self.vod_data['user_id']
@@ -363,7 +366,7 @@ class Clip:
         .view_count     Number of times the clip has been viewed.
         """
         if self_init:
-            self.clip_data = call_api("clips?id={0}".format(clip_id))['data'][0]
+            self.clip_data = call_api(f"clips?id={clip_id}")['data'][0]
 
             self.clip_id = clip_id
             self.user_id = self.clip_data['broadcaster_id']
