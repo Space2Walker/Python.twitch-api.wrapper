@@ -2,6 +2,7 @@
 from urllib.parse import urlencode
 
 
+# get the kwargs keys and iterate
 def kwargs_to_query(kwargs):
     req = ""
     for e in kwargs:

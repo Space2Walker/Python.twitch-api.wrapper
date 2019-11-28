@@ -36,8 +36,17 @@ def call_api(uri):
     :param uri: str
     :return: json object
     """
-    # todo implement error handling and rate limiting
-    return requests.get(api + uri, headers=headers).json()
+    # todo better error handling, rate limiting and removing requests
+
+    response = requests.get(api + uri, headers=headers).json()
+
+    try:
+        if response['data']:
+            pass
+        return response['data']
+
+    except KeyError:
+        raise Exception("NO DATA Your request didn't get any data back")
 
 
 def search(identifier, **kwargs):
@@ -52,8 +61,6 @@ def search(identifier, **kwargs):
     :return: Stream Class Object or list of Objects
     :rtype: collections.defaultlist or Stream
     """
-    # todo check input and make lists for all kwargs and int to string
-    req = ''
     ret = []
 
     # stick to your naming convention twitch for god sake
@@ -61,28 +68,22 @@ def search(identifier, **kwargs):
         # renames the dict Key
         kwargs['broadcaster_id'] = kwargs.pop('user_id')
 
-    # get the kwargs keys and iterate
     req = kwargs_to_query(kwargs)
-
     res = call_api(f"{identifier.lower()}?{req}")
 
-    try:
-        res['data'][0]
-    except (IndexError, KeyError):
-        raise Exception("NO DATA Your request didn't get any data back")
-
+    # convert api return to class
     if identifier.upper() == 'STREAMS':
-        for e in res['data']:
+        for e in res:
             ret.append(Stream(e['user_name'], self_init=False, **e))
         return ret
 
     if identifier.upper() == 'VIDEOS':
-        for e in res['data']:
+        for e in res:
             ret.append(Vod(e['id'], self_init=False, **e))
         return ret
 
     if identifier.upper() == 'CLIPS':
-        for e in res['data']:
+        for e in res:
             ret.append(Clip(e['id'], self_init=False, **e))
         return ret
 
@@ -94,24 +95,23 @@ def get_hls(url, res='best'):
     :param res: 720p, 1080p and so on
     :return: str: The HLS URL
     """
+    # todo split into two functions and try do remove streamlink dependency
     streams = streamlink.streams(url)
-    stream = streams[res].url
-    return stream
+    return streams[res].url
 
 
 def get_game(**kwargs):
     """
     Gets game info`s
-    Only 1 Parameter Allowed, max 100 item per list
-    Input id OR name
+    https://dev.twitch.tv/docs/api/reference#get-games
 
-    :param name: a list of EXACT game names to query
-    :param id: a list of game id`s to query
+    :param kwargs: id= and/or name= 100 combined max
     :return: json containing the game data
     :rtype: list
     """
     req = kwargs_to_query(kwargs)
-    return call_api(f"games?{req}")['data']
+
+    return call_api(f"games?{req}")
 
 
 def get_top_games(first=100):
@@ -123,9 +123,7 @@ def get_top_games(first=100):
     :return: A List of Dicts Containing Game Info`s
     :rtype: list
     """
-
-    top_games = call_api(f"games/top?first={str(first)}")['data']
-    return top_games
+    return call_api(f"games/top?first={str(first)}")
 
 
 class Streamer:
@@ -145,7 +143,7 @@ class Streamer:
         :param name: The Url-save Streamer Name
         """
         # get basic info's for User
-        user_data = call_api(f"users?login={name}")['data'][0]
+        user_data = call_api(f"users?login={name}")[0]
         self.user_id = user_data['id']
         self.name = name
         self.url = 'twitch.tv/' + name
@@ -203,7 +201,7 @@ class Streamer:
             return total_follows
 
         del follows['pagination']
-        return follows['data']
+        return follows
 
     def extensions(self):
         """Get the Active Extensions used by Streamer
@@ -211,7 +209,7 @@ class Streamer:
         :returns: Streamers Active Extensions
         :rtype: list
         """
-        extensions = call_api(f"users/extensions?user_id={self.user_id}")['data']
+        extensions = call_api(f"users/extensions?user_id={self.user_id}")
 
         e_index = []
         for e in extensions:
@@ -230,7 +228,7 @@ class Stream(Streamer):
         if self_init:
             super(Stream, self).__init__(streamer)
             # get basic info`s of Stream
-            self.stream_data = call_api(f"streams?user_id={self.user_id}")['data']
+            self.stream_data = call_api(f"streams?user_id={self.user_id}")
 
             try:
                 self.stream_id = self.stream_data[0]['id']
@@ -261,8 +259,7 @@ class Stream(Streamer):
 
     def get_tags(self):
         """Get the Tags of the Stream"""
-        tags = call_api(f"streams/tags?broadcaster_id={self.user_id}")
-        return tags['data']
+        return call_api(f"streams/tags?broadcaster_id={self.user_id}")
 
     # todo get_meta https://dev.twitch.tv/docs/api/reference#get-streams-metadata
     # uses its one rate limiting
@@ -290,7 +287,7 @@ class Vod:
         :param vod_id: The Vod ID "513455174"
         """
         if self_init:
-            self.vod_data = call_api(f"videos?id={vod_id}")['data'][0]
+            self.vod_data = call_api(f"videos?id={vod_id}")[0]
 
             self.vod_id = self.vod_data['id']
             self.user_id = self.vod_data['user_id']
@@ -344,7 +341,7 @@ class Clip:
         .view_count     Number of times the clip has been viewed.
         """
         if self_init:
-            self.clip_data = call_api(f"clips?id={clip_id}")['data'][0]
+            self.clip_data = call_api(f"clips?id={clip_id}")[0]
 
             self.clip_id = clip_id
             self.user_id = self.clip_data['broadcaster_id']
