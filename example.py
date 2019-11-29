@@ -1,5 +1,7 @@
 import twitch
 
+res = twitch.call_api("users?login=gronkh")
+print(res)
 #####################################################
 #                   Search                          #
 #####################################################
@@ -9,12 +11,12 @@ test = helix.search('Streams', first=['100'])
 for stream in test:
     print(stream.user_name, stream.title, stream.viewers)
 """
-
+"""
 # check if Streamers are online
 test = twitch.search('Streams', user_login=['gronkh', 'lastmiles'], user_id=49112900)
 for stream in test:
     print(stream.user_name, stream.title, stream.viewers)
-
+"""
 #####################################################
 #           Iterate over  all Followers             #
 #####################################################

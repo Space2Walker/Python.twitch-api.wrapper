@@ -10,12 +10,8 @@ import twitch
 from abos import abos
 
 init(autoreset=True)
-
 n = 1
 
-# get info's
-# for user in abos:
-#     index.append(helix.Stream(user))
 index = twitch.search('STREAMS', user_login=abos)
 
 

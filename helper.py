@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 
 def kwargs_to_query(kwargs):
     """ goes over kwargs and makes a string
-    key1=value&key1=value&key2=value
+    key1=value1&key1=value2&key2=value
     auto converts input from str, int and list of str and int
     """
     request = ""

@@ -39,7 +39,6 @@ def call_api(uri):
     # todo better error handling, rate limiting and removing requests
 
     response = requests.get(api + uri, headers=headers).json()
-
     try:
         if response['data']:
             return response['data']
@@ -104,7 +103,7 @@ def get_hls(url, res='best'):
 def get_game(**kwargs):
     """
     Gets game info`s
-    https://dev.twitch.tv/docs/api/reference#get-games
+    https://dev.twitch.v/docs/api/reference#get-games
 
     :param kwargs: id= and/or name= 100 combined max
     :return: Json Containing the game data
@@ -143,6 +142,7 @@ class Streamer:
 
         :param name: The Url-save Streamer Name
         """
+        # todo @property for total followers and extension
         # get basic info's for User
         user_data = call_api(f"users?login={name}")[0]
         self.user_id = user_data['id']
