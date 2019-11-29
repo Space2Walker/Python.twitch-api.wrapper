@@ -56,7 +56,9 @@ def search(identifier, **kwargs):
     https://dev.twitch.tv/docs/api/reference/#get-clips
 
     :param identifier: 'STREAMS' OR 'VIDEOS' OR 'CLIP'
+    :type identifier: str
     :param kwargs: user_login=['gronkh', 'lastmiles'], user_id=[49112900]
+    :type kwargs: str or int or list
     :return: Stream Class Object or list of Objects
     :rtype: collections.defaultlist or Stream
     """
@@ -105,12 +107,12 @@ def get_game(**kwargs):
     https://dev.twitch.tv/docs/api/reference#get-games
 
     :param kwargs: id= and/or name= 100 combined max
-    :return: json containing the game data
+    :return: Json Containing the game data
     :rtype: list
     """
-    req = kwargs_to_query(kwargs)
+    request = kwargs_to_query(kwargs)
 
-    return call_api(f"games?{req}")
+    return call_api(f"games?{request}")
 
 
 def get_top_games(first=100):
@@ -119,7 +121,7 @@ def get_top_games(first=100):
 
     :param first: The amount of objects per Call
     :type first: int
-    :return: A List of Dicts Containing Game Info`s
+    :return: Json Containing Game Info`s
     :rtype: list
     """
     return call_api(f"games/top?first={str(first)}")
