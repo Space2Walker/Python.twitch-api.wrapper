@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # author: Space2Walker
 # 2019-09-12
-import gi
 import time
+
+import gi
 from Twitch import Streamer
 from Twitch import abos
 

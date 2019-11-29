@@ -1,4 +1,4 @@
-import helix
+import twitch
 
 #####################################################
 #                   Search                          #
@@ -11,7 +11,7 @@ for stream in test:
 """
 
 # check if Streamers are online
-test = helix.search('Streams', user_login=['gronkh', 'lastmiles'], user_id=49112900)
+test = twitch.search('Streams', user_login=['gronkh', 'lastmiles'], user_id=49112900)
 for stream in test:
     print(stream.user_name, stream.title, stream.viewers)
 

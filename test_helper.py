@@ -22,14 +22,14 @@ class TestHelper(unittest.TestCase):
                                                       x='sdf')),
                          'id=100&id=200&name=foo&name=bar&y=123&x=sdf')
         # test float raise
-        with self.assertRaises(Exception):
+        with self.assertRaises(TypeError):
             helper.kwargs_to_query(dummy(foo=1.5))
-        with self.assertRaises(Exception):
+        with self.assertRaises(TypeError):
             helper.kwargs_to_query(dummy(foo=[1.5, 2.3]))
         # test dict raise
-        with self.assertRaises(Exception):
+        with self.assertRaises(TypeError):
             helper.kwargs_to_query(dummy(foo={'k': 'v'}))
-        with self.assertRaises(Exception):
+        with self.assertRaises(TypeError):
             helper.kwargs_to_query(dummy(foo=[{'k': 'v'}, {'k': 'v'}]))
 
 

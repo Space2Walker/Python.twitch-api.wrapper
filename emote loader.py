@@ -1,7 +1,8 @@
-import requests
-from bs4 import BeautifulSoup
-from PIL import Image
 from io import BytesIO
+
+import requests
+from PIL import Image
+from bs4 import BeautifulSoup
 
 response = requests.get('https://www.twitchmetrics.net/emotes').text
 soup = BeautifulSoup(response, 'html.parser')
