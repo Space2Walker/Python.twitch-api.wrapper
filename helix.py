@@ -42,8 +42,7 @@ def call_api(uri):
 
     try:
         if response['data']:
-            pass
-        return response['data']
+            return response['data']
 
     except KeyError:
         raise Exception("NO DATA Your request didn't get any data back")

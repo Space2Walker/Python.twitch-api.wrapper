@@ -1,9 +1,16 @@
-import helix
 #####################################################
 #                   Search                          #
 #####################################################
 """
+# Get 100 most viewed Streams
 test = helix.search('Streams', first=['100'])
+for stream in test:
+    print(stream.user_name, stream.title, stream.viewers)
+"""
+
+"""
+# check if Streamers are online
+test = helix.search('Streams', user_login=['gronkh', 'lastmiles'], user_id=49112900)
 for stream in test:
     print(stream.user_name, stream.title, stream.viewers)
 """
@@ -22,6 +29,7 @@ while True:
 #####################################################
 #                   get_game                        #
 #####################################################
-
+"""
 game = helix.get_game(name=["FIFA 20"], id=[27471])
 print(game)
+"""
