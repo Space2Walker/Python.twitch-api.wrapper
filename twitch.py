@@ -111,7 +111,7 @@ def get_game(**kwargs):
     """
     request = kwargs_to_query(kwargs)
 
-    return call_api(f"games?{request}")
+    return call_api(f"games?{request}")['data']
 
 
 def get_top_games(first=100):
@@ -123,7 +123,7 @@ def get_top_games(first=100):
     :return: Json Containing Game Info`s
     :rtype: list
     """
-    return call_api(f"games/top?first={str(first)}")
+    return call_api(f"games/top?first={str(first)}")['data']
 
 
 class Streamer:
@@ -154,8 +154,6 @@ class Streamer:
         self.profile_image_url = user_data['profile_image_url']
         self.offline_image_url = user_data['offline_image_url']
         self.total_views = user_data['view_count']
-        self._follows_page = ''
-        self._follower_page = ''
 
     @property
     def extensions(self):
@@ -199,25 +197,27 @@ class Streamer:
         :rtype: dict
         """
         follows = None
+        _follows_page = ''
+        _follower_page = ''
 
         if (direction.upper() != 'TO') and (direction.upper() != 'FROM'):
             raise TypeError('Direction must be "TO" or "FROM"')
 
-        while (not first) or (first > 0):
+        while (first is None) or (first > 0):
             if direction == 'TO':
                 follows = call_api(
-                    f"users/follows?from_id={self.user_id}&first=100&after={self._follows_page}")
+                    f"users/follows?from_id={self.user_id}&first=100&after={_follows_page}")
 
                 try:
-                    self._follows_page = follows['pagination']['cursor']
+                    _follows_page = follows['pagination']['cursor']
                 except TypeError:
                     return
 
             if direction == 'FROM':
                 follows = call_api(
-                    f"users/follows?to_id={self.user_id}&first=100&after={self._follower_page}")
+                    f"users/follows?to_id={self.user_id}&first=100&after={_follower_page}")
                 try:
-                    self._follower_page = follows['pagination']['cursor']
+                    _follower_page = follows['pagination']['cursor']
                 except TypeError:
                     return
 
