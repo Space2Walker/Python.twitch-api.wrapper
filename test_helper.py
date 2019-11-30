@@ -24,36 +24,19 @@ class TestKwargsToString(unittest.TestCase):
 
     def test_kwargs_value(self):
         # test negative int
-        with self.assertRaises(ValueError):
-            helper.kwargs_to_query(dummy(foo=-1))
-        with self.assertRaises(ValueError):
-            helper.kwargs_to_query(dummy(foo=[-1, -2]))
+        self.assertRaises(ValueError, helper.kwargs_to_query, dummy(foo=-1))
+        self.assertRaises(ValueError, helper.kwargs_to_query, dummy(foo=[-1, -2]))
 
     def test_kwargs_type(self):
         # test float
-        with self.assertRaises(TypeError):
-            helper.kwargs_to_query(dummy(foo=1.5))
-        with self.assertRaises(TypeError):
-            helper.kwargs_to_query(dummy(foo=[1.5, 2.3]))
-
+        self.assertRaises(TypeError, helper.kwargs_to_query, dummy(foo=1.5))
+        self.assertRaises(TypeError, helper.kwargs_to_query, dummy(foo=[1.5, 2.3]))
         # test dict
-        with self.assertRaises(TypeError):
-            helper.kwargs_to_query(dummy(foo={'k': 'v'}))
-        with self.assertRaises(TypeError):
-            helper.kwargs_to_query(dummy(foo=[{'k': 'v'}, {'k': 'v'}]))
-
+        self.assertRaises(TypeError, helper.kwargs_to_query, dummy(foo={'k': 'v'}))
+        self.assertRaises(TypeError, helper.kwargs_to_query, dummy(foo=[{'k': 'v'}, {'k': 'v'}]))
         # test complex
-        with self.assertRaises(TypeError):
-            helper.kwargs_to_query(dummy(foo=5j))
-        with self.assertRaises(TypeError):
-            helper.kwargs_to_query(dummy(foo=[1j, 2j]))
-
+        self.assertRaises(TypeError, helper.kwargs_to_query, dummy(foo=5j))
+        self.assertRaises(TypeError, helper.kwargs_to_query, dummy(foo=[1j, 2j]))
         # test bool
-        with self.assertRaises(TypeError):
-            helper.kwargs_to_query(dummy(foo=True))
-        with self.assertRaises(TypeError):
-            helper.kwargs_to_query(dummy(foo=[True, False]))
-
-
-if __name__ == '__main__':
-    unittest.main()
+        self.assertRaises(TypeError, helper.kwargs_to_query, dummy(foo=True))
+        self.assertRaises(TypeError, helper.kwargs_to_query, dummy(foo=[True, False]))
