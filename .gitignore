@@ -1,5 +1,7 @@
 # Specify filepatterns you want git to ignore.
 
-.idea
-__pycache__
+.coverage
 abos.py
+.idea/
+__pycache__/
+htmlcov/
