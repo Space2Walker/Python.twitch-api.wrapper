@@ -3,15 +3,15 @@ from unittest.mock import patch
 
 import twitch
 
-mock_data = [{'user_id': 'foo', 'broadcaster_id': 'foo', 'started_at': 'foo',
-              'broadcaster_name': 'foo', 'created_at': 'foo',
-              'creator_id': 'foo', 'creator_name': 'foo', 'tag_ids': 'foo',
-              'embed_url': 'foo', 'game_id': 'foo', 'duration': 'foo',
-              'language': 'foo', 'thumbnail_url': 'foo', 'viewer_count': 'foo',
-              'title': 'foo', 'url': 'foo', 'id': 'foo', 'type': 'foo',
-              'video_id': 'foo', 'view_count': 'foo', 'user_name': 'foo',
-              'description': 'foo', 'published_at': 'foo', 'viewable': 'foo'
-              }]
+mock_data = {'total': '23', 'data': [{'user_id': 'foo', 'broadcaster_id': 'foo', 'started_at': 'foo',
+                                      'broadcaster_name': 'foo', 'created_at': 'foo',
+                                      'creator_id': 'foo', 'creator_name': 'foo', 'tag_ids': 'foo',
+                                      'embed_url': 'foo', 'game_id': 'foo', 'duration': 'foo',
+                                      'language': 'foo', 'thumbnail_url': 'foo', 'viewer_count': 'foo',
+                                      'title': 'foo', 'url': 'foo', 'id': 'foo', 'type': 'foo',
+                                      'video_id': 'foo', 'view_count': 'foo', 'user_name': 'foo',
+                                      'description': 'foo', 'published_at': 'foo', 'viewable': 'foo'
+                                      }], 'pagination': {'cursor': '12314'}}
 
 
 class TestTwitch(unittest.TestCase):
@@ -57,14 +57,14 @@ class TestTwitch(unittest.TestCase):
             mocked_api.return_value = mock_data
             test = twitch.get_game(name=['Minecraft', 'League of Legends'], id=493057)
             mocked_api.assert_called_with('games?name=Minecraft&name=League+of+Legends&id=493057')
-            self.assertEqual(test, mock_data)
+            self.assertEqual(test, mock_data['data'])
 
     def test_get_top_games(self):
         with patch('twitch.call_api') as mocked_api:
             mocked_api.return_value = mock_data
             test = twitch.get_top_games(first=20)
             mocked_api.assert_called_with('games/top?first=20')
-            self.assertEqual(test, mock_data)
+            self.assertEqual(test, mock_data['data'])
 
 
 if __name__ == '__main__':

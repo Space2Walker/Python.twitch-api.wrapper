@@ -10,17 +10,25 @@ def kwargs_to_query(kwargs):
     request = ""
 
     for key, value in kwargs.items():
-        # check is float and raise
-        if isinstance(value, (float, dict)):
+        # check if type is unsupported and raise
+        if isinstance(value, (float, dict, complex, bool)):
             raise TypeError(f'{type(value)} Not Supported')
+        # check if negative int and raise
+        if isinstance(value, int):
+            if value < 0:
+                raise ValueError("Negative Values aren't Supported")
 
         # check if list
         if isinstance(value, list):
             # iterate over list values and combine with key to request string
             for val in value:
-                # check is float and raise
-                if isinstance(val, (float, dict)):
+                # check if type is unsupported and raise
+                if isinstance(val, (float, dict, complex, bool)):
                     raise TypeError(f'{type(val)} Not Supported')
+                # check if negative int and raise
+                if isinstance(val, int):
+                    if val < 0:
+                        raise ValueError("Negative Values aren't Supported")
 
                 val = str(val)
                 request = request + urlencode({key: val}) + '&'

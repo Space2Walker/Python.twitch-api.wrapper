@@ -69,7 +69,7 @@ def search(identifier, **kwargs):
         kwargs['broadcaster_id'] = kwargs.pop('user_id')
 
     req = kwargs_to_query(kwargs)
-    res = call_api(f"{identifier.lower()}?{req}")
+    res = call_api(f"{identifier.lower()}?{req}")['data']
 
     # convert api return to class
     if identifier.upper() == 'STREAMS':
@@ -182,19 +182,17 @@ class Streamer:
             f"users/follows?from_id={self.user_id}")['total']
         return int(t_follow)
 
-    def follows(self, direction, first=None):
+    def follows(self, direction, first=100):
         """Yields the Users the Input is Following
 
         OR is Followed by
 
-        If Total is set to True returns the total followers as Type int instead.
-
         :param direction: Follow Direction "TO" Streamer "FROM" Streamer
         :type direction: str
         :param first: Amount of Followers to Quarry if None gets All
-        :type first; int
+        :type first: None or int
         :returns: Follower Info`s
-        :rtype: dict
+        :rtype: Iterable[dict]
         """
         follows = None
         _follows_page = ''
