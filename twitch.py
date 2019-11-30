@@ -41,7 +41,7 @@ def call_api(uri):
     response = requests.get(api + uri, headers=headers).json()
     try:
         if response['data']:
-            return response['data']
+            return response
 
     except KeyError:
         raise Exception("NO DATA Your request didn't get any data back")
@@ -139,12 +139,13 @@ class Streamer:
         - .profile_image_url: Url of the Profile Image
         - .offline_image_url: The Url to the Image that is shown if the Stream is Offline
         - .total_views: The Total amount of Views the Channel has
+        - .follower: The Total amount of Followers the Channel has
+        - .extensions: The Used Extensions
 
         :param name: The Url-save Streamer Name
         """
-        # todo @property for total followers and extension
         # get basic info's for User
-        user_data = call_api(f"users?login={name}")[0]
+        user_data = call_api(f"users?login={name}")['data'][0]
         self.user_id = user_data['id']
         self.name = name
         self.url = 'twitch.tv/' + name
@@ -153,72 +154,78 @@ class Streamer:
         self.profile_image_url = user_data['profile_image_url']
         self.offline_image_url = user_data['offline_image_url']
         self.total_views = user_data['view_count']
-        self.follows_page = ''
-        self.follower_page = ''
+        self._follows_page = ''
+        self._follower_page = ''
 
-    def follows(self, direction, total=False, first=100):
-        """Iterates over the Users the Input is Following
-
-        OR is Followed by
-        in a Json object containing 100 users each Iteration.
-
-        If Total is set to True returns the total followers as Type int instead.
-
-        :param direction: Follow Direction "TO" Streamer "FROM" Streamer
-        :type direction: str
-        :param total: Default False. If True returns Total follows
-        :type total: bool
-        :param first: Amount of Followers per Querry
-        :type first; int
-        :returns: Follower Info`s OR None if Pool is empty
-        :rtype: list
-        """
-        # todo make class for follower
-        follows = None
-        total_follows = None
-
-        if (direction != 'TO') and (direction != 'FROM'):
-            raise TypeError('Direction must be "TO" or "FROM"')
-
-        if direction == 'TO':
-            follows = call_api(
-                f"users/follows?from_id={self.user_id}&first={str(first)}&after={self.follows_page}")
-            total_follows = follows['total']
-            try:
-                self.follows_page = follows['pagination']['cursor']
-            except KeyError:
-                return None
-
-        if direction == 'FROM':
-            follows = call_api(
-                f"users/follows?to_id={self.user_id}&first={str(first)}&after={self.follower_page}")
-            total_follows = int(follows['total'])
-            try:
-                self.follower_page = follows['pagination']['cursor']
-            except KeyError:
-                return None
-
-        if total is True:
-            return total_follows
-
-        del follows['pagination']
-        return follows
-
+    @property
     def extensions(self):
         """Get the Active Extensions used by Streamer
 
         :returns: Streamers Active Extensions
-        :rtype: list
+        :rtype: list or dict
         """
-        extensions = call_api(f"users/extensions?user_id={self.user_id}")
-
+        extensions = call_api(f"users/extensions?user_id={self.user_id}")['data']
         e_index = []
         for e in extensions:
             for r in extensions[e]:
                 if extensions[e][r]['active']:
                     del extensions[e][r]['active']
                     e_index.append({e: extensions[e][r]})
-        return e_index
+        return e_index[0]['overlay']
+
+    @property
+    def follower(self):
+        """Get Total Follower
+
+        :returns: Total Follower
+        :rtype: int
+        """
+        t_follow = call_api(
+            f"users/follows?from_id={self.user_id}")['total']
+        return int(t_follow)
+
+    def follows(self, direction, first=None):
+        """Yields the Users the Input is Following
+
+        OR is Followed by
+
+        If Total is set to True returns the total followers as Type int instead.
+
+        :param direction: Follow Direction "TO" Streamer "FROM" Streamer
+        :type direction: str
+        :param first: Amount of Followers to Quarry if None gets All
+        :type first; int
+        :returns: Follower Info`s
+        :rtype: dict
+        """
+        follows = None
+
+        if (direction.upper() != 'TO') and (direction.upper() != 'FROM'):
+            raise TypeError('Direction must be "TO" or "FROM"')
+
+        while (not first) or (first > 0):
+            if direction == 'TO':
+                follows = call_api(
+                    f"users/follows?from_id={self.user_id}&first=100&after={self._follows_page}")
+
+                try:
+                    self._follows_page = follows['pagination']['cursor']
+                except TypeError:
+                    return
+
+            if direction == 'FROM':
+                follows = call_api(
+                    f"users/follows?to_id={self.user_id}&first=100&after={self._follower_page}")
+                try:
+                    self._follower_page = follows['pagination']['cursor']
+                except TypeError:
+                    return
+
+            del follows['pagination']
+            for e in follows['data']:
+                if first:
+                    first = first - 1
+                yield e
 
     # todo badges and emotes
 
@@ -232,15 +239,15 @@ class Stream(Streamer):
             self.stream_data = call_api(f"streams?user_id={self.user_id}")
 
             try:
-                self.stream_id = self.stream_data[0]['id']
-                self.game_id = self.stream_data[0]['game_id']
-                self.type = self.stream_data[0]['type']
-                self.title = self.stream_data[0]['title']
-                self.viewers = self.stream_data[0]['viewer_count']
-                self.started_at = self.stream_data[0]['started_at']
-                self.language = self.stream_data[0]['language']
-                self.thumbnail_url = self.stream_data[0]['thumbnail_url']
-                self.tag_ids = self.stream_data[0]['tag_ids']
+                self.stream_id = self.stream_data['data'][0]['id']
+                self.game_id = self.stream_data['data'][0]['game_id']
+                self.type = self.stream_data['data'][0]['type']
+                self.title = self.stream_data['data'][0]['title']
+                self.viewers = self.stream_data['data'][0]['viewer_count']
+                self.started_at = self.stream_data['data'][0]['started_at']
+                self.language = self.stream_data['data'][0]['language']
+                self.thumbnail_url = self.stream_data['data'][0]['thumbnail_url']
+                self.tag_ids = self.stream_data['data'][0]['tag_ids']
 
             except IndexError:
                 self.type = "offline"
@@ -288,7 +295,7 @@ class Vod:
         :param vod_id: The Vod ID "513455174"
         """
         if self_init:
-            self.vod_data = call_api(f"videos?id={vod_id}")[0]
+            self.vod_data = call_api(f"videos?id={vod_id}")['data'][0]
 
             self.vod_id = self.vod_data['id']
             self.user_id = self.vod_data['user_id']
@@ -342,7 +349,7 @@ class Clip:
         .view_count     Number of times the clip has been viewed.
         """
         if self_init:
-            self.clip_data = call_api(f"clips?id={clip_id}")[0]
+            self.clip_data = call_api(f"clips?id={clip_id}")['data'][0]
 
             self.clip_id = clip_id
             self.user_id = self.clip_data['broadcaster_id']

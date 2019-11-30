@@ -23,7 +23,7 @@ class TestTwitch(unittest.TestCase):
             test = twitch.call_api('streams?user_login=gronkh')
             mocked_get.assert_called_with((twitch.api + 'streams?user_login=gronkh'), headers=twitch.headers)
             # test response
-            self.assertEqual(str(test), "foo")
+            self.assertEqual(test, {'data': 'foo'})
 
             # BAD Request
             mocked_get.return_value.json.return_value = {"bar": "foo"}
