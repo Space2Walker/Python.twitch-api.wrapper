@@ -92,8 +92,11 @@ def get_hls(url, res='best'):
     """
     Crawls the HLS Url
     :param url: The Twitch video or Stream Url
+    :type url: str
     :param res: 720p, 1080p and so on
-    :return: str: The HLS URL
+    :type res: str
+    :return: The HLS URL
+    :rtype; str
     """
     # todo split into two functions and try do remove streamlink dependency
     streams = streamlink.streams(url)
@@ -146,14 +149,14 @@ class Streamer:
         """
         # get basic info's for User
         user_data = call_api(f"users?login={name}")['data'][0]
-        self.user_id = user_data['id']
+        self.user_id = int(user_data['id'])
         self.name = name
         self.url = 'twitch.tv/' + name
         self.description = user_data['description']
         self.partner = user_data['broadcaster_type']
         self.profile_image_url = user_data['profile_image_url']
         self.offline_image_url = user_data['offline_image_url']
-        self.total_views = user_data['view_count']
+        self.total_views = int(user_data['view_count'])
 
     @property
     def extensions(self):
@@ -169,7 +172,7 @@ class Streamer:
                 if extensions[e][r]['active']:
                     del extensions[e][r]['active']
                     e_index.append({e: extensions[e][r]})
-        return e_index[0]['overlay']
+        return e_index[0]
 
     @property
     def follower(self):
@@ -199,24 +202,23 @@ class Streamer:
         _follower_page = ''
 
         if (direction.upper() != 'TO') and (direction.upper() != 'FROM'):
-            raise TypeError('Direction must be "TO" or "FROM"')
+            raise ValueError('Direction must be "TO" or "FROM"')
 
         while (first is None) or (first > 0):
-            if direction == 'TO':
+            if direction.upper() == 'TO':
                 follows = call_api(
                     f"users/follows?from_id={self.user_id}&first=100&after={_follows_page}")
-
                 try:
                     _follows_page = follows['pagination']['cursor']
-                except TypeError:
+                except (KeyError, TypeError):
                     return
 
-            if direction == 'FROM':
+            if direction.upper() == 'FROM':
                 follows = call_api(
                     f"users/follows?to_id={self.user_id}&first=100&after={_follower_page}")
                 try:
                     _follower_page = follows['pagination']['cursor']
-                except TypeError:
+                except (KeyError, TypeError):
                     return
 
             del follows['pagination']
@@ -295,9 +297,9 @@ class Vod:
         if self_init:
             self.vod_data = call_api(f"videos?id={vod_id}")['data'][0]
 
-            self.vod_id = self.vod_data['id']
-            self.user_id = self.vod_data['user_id']
-            self.user_name = self.vod_data['user_name']
+            self.vod_id = int(self.vod_data['id'])
+            self.user_id = int(self.vod_data['user_id'])
+            self.name = self.vod_data['user_name']
             self.url = self.vod_data['url']
             self.title = self.vod_data['title']
             self.description = self.vod_data['description']
@@ -305,7 +307,7 @@ class Vod:
             self.published_at = self.vod_data['published_at']
             self.thumbnail_url = self.vod_data['thumbnail_url']
             self.viewable = self.vod_data['viewable']
-            self.view_count = self.vod_data['view_count']
+            self.view_count = int(self.vod_data['view_count'])
             self.language = self.vod_data['language']
             self.type = self.vod_data['type']
             self.duration = self.vod_data['duration']
@@ -350,19 +352,19 @@ class Clip:
             self.clip_data = call_api(f"clips?id={clip_id}")['data'][0]
 
             self.clip_id = clip_id
-            self.user_id = self.clip_data['broadcaster_id']
-            self.user_name = self.clip_data['broadcaster_name']
+            self.user_id = int(self.clip_data['broadcaster_id'])
+            self.name = self.clip_data['broadcaster_name']
             self.created_at = self.clip_data['created_at']
-            self.creator_id = self.clip_data['creator_id']
+            self.creator_id = int(self.clip_data['creator_id'])
             self.creator_name = self.clip_data['creator_name']
             self.embed_url = self.clip_data['embed_url']
-            self.game_id = self.clip_data['game_id']
+            self.game_id = int(self.clip_data['game_id'])
             self.language = self.clip_data['language']
             self.thumbnail_url = self.clip_data['thumbnail_url']
             self.title = self.clip_data['title']
             self.url = self.clip_data['url']
-            self.video_id = self.clip_data['video_id']
-            self.view_count = self.clip_data['view_count']
+            self.video_id = int(self.clip_data['video_id'])
+            self.view_count = int(self.clip_data['view_count'])
 
         if not self_init:
             self.clip_id = clip_id

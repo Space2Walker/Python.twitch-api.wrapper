@@ -29,9 +29,10 @@ for stream in test:
 #           Iterate over all Followers             #
 #####################################################
 
-follow_gen = twitch.Streamer('lastmiles').follows('FROM')
+follow_gen = twitch.Streamer('lastmiles').follows('FROM', first=100)
 for e in follow_gen:
     print(e)
+
 
 
 #####################################################
@@ -39,5 +40,13 @@ for e in follow_gen:
 #####################################################
 """
 game = twitch.get_game(name=["FIFA 20"], id=[27471])
+print(game)
+"""
+
+#####################################################
+#                   get_top_game                    #
+#####################################################
+"""
+game = twitch.get_top_games()
 print(game)
 """

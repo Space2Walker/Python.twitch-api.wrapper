@@ -3,18 +3,20 @@ from unittest.mock import patch
 
 import twitch
 
-mock_data = {'total': '23', 'data': [{'user_id': 'foo', 'broadcaster_id': 'foo', 'started_at': 'foo',
-                                      'broadcaster_name': 'foo', 'created_at': 'foo',
-                                      'creator_id': 'foo', 'creator_name': 'foo', 'tag_ids': 'foo',
-                                      'embed_url': 'foo', 'game_id': 'foo', 'duration': 'foo',
-                                      'language': 'foo', 'thumbnail_url': 'foo', 'viewer_count': 'foo',
-                                      'title': 'foo', 'url': 'foo', 'id': 'foo', 'type': 'foo',
-                                      'video_id': 'foo', 'view_count': 'foo', 'user_name': 'foo',
-                                      'description': 'foo', 'published_at': 'foo', 'viewable': 'foo'
+mock_data = {'total': '23', 'data': [{'user_id': '123', 'broadcaster_id': '123', 'started_at': 'foo',
+                                      'broadcaster_name': 'Gronkh', 'broadcaster_type': 'foo',
+                                      'created_at': 'foo', 'profile_image_url': 'foo',
+                                      'creator_id': '123', 'creator_name': 'foo', 'tag_ids': 'foo',
+                                      'embed_url': 'foo', 'game_id': '123', 'duration': 'foo',
+                                      'language': 'foo', 'thumbnail_url': 'foo', 'viewer_count': '123',
+                                      'title': 'foo', 'url': 'foo', 'id': '123', 'type': 'foo',
+                                      'video_id': '123', 'view_count': '123', 'user_name': 'Gronkh',
+                                      'description': 'foo', 'published_at': 'foo', 'viewable': 'foo',
+                                      'offline_image_url': 'foo'
                                       }], 'pagination': {'cursor': '12314'}}
 
 
-class TestTwitch(unittest.TestCase):
+class TestTwitchFunctions(unittest.TestCase):
     def test_call_api(self):
         with patch('requests.get') as mocked_get:
             # GOOD Request
@@ -52,6 +54,12 @@ class TestTwitch(unittest.TestCase):
             # test response but i don't get it
             self.assertEqual(str(test)[:20], "[<twitch.Clip object")
 
+    def test_get_hls(self):
+        with patch('twitch.streamlink.streams') as mocked_streamlink:
+            mocked_streamlink.return_value.url.return_value = {'best': 'bar'}
+            test = twitch.get_hls('twitch.tv/gronkh')
+            self.assertEqual(str(test)[:45], "<MagicMock name='streams().__getitem__().url'")
+
     def test_get_game(self):
         with patch('twitch.call_api') as mocked_api:
             mocked_api.return_value = mock_data
@@ -67,5 +75,136 @@ class TestTwitch(unittest.TestCase):
             self.assertEqual(test, mock_data['data'])
 
 
-if __name__ == '__main__':
-    unittest.main()
+class TestStreamer(unittest.TestCase):
+    def test_init(self):
+        with patch('twitch.call_api') as mocked_api:
+            mocked_api.return_value = mock_data
+            test = twitch.Streamer('Gronkh')
+            mocked_api.assert_called_with('users?login=Gronkh')
+
+            self.assertEqual(test.user_id, 123)
+            self.assertEqual(test.name, 'Gronkh')
+            self.assertEqual(test.url, 'twitch.tv/Gronkh')
+            self.assertEqual(test.description, 'foo')
+            self.assertEqual(test.partner, 'foo')
+            self.assertEqual(test.profile_image_url, 'foo')
+            self.assertEqual(test.offline_image_url, 'foo')
+            self.assertEqual(test.total_views, 123)
+
+    def test_extensions(self):
+        with patch('twitch.call_api') as mocked_api:
+            mocked_api.return_value = mock_data
+
+            test = twitch.Streamer('Gronkh')
+            mocked_api.assert_called_with('users?login=Gronkh')
+
+            mocked_api.return_value = {'data': {'panel': {'1': {'active': False}, '2': {'active': False},
+                                                          '3': {'active': False}},
+                                                'overlay': {'1': {'active': True,
+                                                                  'id': 'c8okel68mmobvnso7ty0cygj8easam',
+                                                                  'version': '0.1.5',
+                                                                  'name': 'Smart Click Maps'}},
+                                                'component': {'1': {'active': False}, '2': {'active': False}}}}
+
+            self.assertEqual(test.extensions, {'overlay': {'id': 'c8okel68mmobvnso7ty0cygj8easam',
+                                                           'name': 'Smart Click Maps',
+                                                           'version': '0.1.5'}})
+
+    def test_follower(self):
+        with patch('twitch.call_api') as mocked_api:
+            mocked_api.return_value = mock_data
+            test = twitch.Streamer('Gronkh')
+            mocked_api.assert_called_with('users?login=Gronkh')
+            self.assertEqual(test.follower, 23)
+
+    def test_follows(self):
+        # todo write a proper generator test
+        with patch('twitch.call_api') as mocked_api:
+            mocked_api.return_value = mock_data
+            test = twitch.Streamer('Phunk').follows('to')
+            mocked_api.assert_called_with('users?login=Phunk')
+            for e in test:
+                self.assertEqual(e, mock_data['data'][0])
+
+        with patch('twitch.call_api') as mocked_api:
+            mocked_api.return_value = mock_data
+            test1 = twitch.Streamer('lastmiles').follows('from')
+            mocked_api.assert_called_with('users?login=lastmiles')
+            try:
+                self.assertEqual(next(test1), mock_data['data'][0])
+            except StopIteration:
+                pass
+
+        with self.assertRaises(ValueError):
+            gen = twitch.Streamer('rw_grim').follows('hey')
+            next(gen)
+
+
+class TestStream(unittest.TestCase):
+    def test_init(self):
+        with patch('twitch.call_api') as mocked_api:
+            mocked_api.return_value = mock_data
+            test = twitch.Stream('Gronkh')
+            mocked_api.assert_called_with('streams?user_id=123')
+
+            self.assertEqual(test.user_id, 123)
+            self.assertEqual(test.name, 'Gronkh')
+            self.assertEqual(test.url, 'twitch.tv/Gronkh')
+            self.assertEqual(test.description, 'foo')
+            self.assertEqual(test.partner, 'foo')
+            self.assertEqual(test.profile_image_url, 'foo')
+            self.assertEqual(test.offline_image_url, 'foo')
+            self.assertEqual(test.total_views, 123)
+
+    def test_get_tags(self):
+        with patch('twitch.call_api') as mocked_api:
+            mocked_api.return_value = mock_data
+            test = twitch.Stream('Gronkh').get_tags()
+            mocked_api.assert_called_with('streams/tags?broadcaster_id=123')
+            self.assertEqual(test, mock_data)
+
+
+class TestVod(unittest.TestCase):
+    def test_init(self):
+        with patch('twitch.call_api') as mocked_api:
+            mocked_api.return_value = mock_data
+            test = twitch.Vod(12345)
+            mocked_api.assert_called_with('videos?id=12345')
+
+            self.assertEqual(test.vod_id, 123)
+            self.assertEqual(test.user_id, 123)
+            self.assertEqual(test.name, 'Gronkh')
+            self.assertEqual(test.url, 'foo')
+            self.assertEqual(test.description, 'foo')
+            self.assertEqual(test.created_at, 'foo')
+            self.assertEqual(test.published_at, 'foo')
+            self.assertEqual(test.thumbnail_url, 'foo')
+            self.assertEqual(test.viewable, 'foo')
+            self.assertEqual(test.view_count, 123)
+            self.assertEqual(test.language, 'foo')
+            self.assertEqual(test.type, 'foo')
+            self.assertEqual(test.duration, 'foo')
+
+
+class TestClip(unittest.TestCase):
+    def test_init(self):
+        with patch('twitch.call_api') as mocked_api:
+            mocked_api.return_value = mock_data
+            test = twitch.Clip(12345)
+            mocked_api.assert_called_with('clips?id=12345')
+
+            self.assertEqual(test.clip_id, 12345)
+            self.assertEqual(test.user_id, 123)
+            self.assertEqual(test.name, 'Gronkh')
+            self.assertEqual(test.url, 'foo')
+            self.assertEqual(test.created_at, 'foo')
+            self.assertEqual(test.creator_id, 123)
+            self.assertEqual(test.creator_name, 'foo')
+            self.assertEqual(test.embed_url, 'foo')
+            self.assertEqual(test.game_id, 123)
+            self.assertEqual(test.language, 'foo')
+            self.assertEqual(test.thumbnail_url, 'foo')
+            self.assertEqual(test.title, 'foo')
+            self.assertEqual(test.url, 'foo')
+            self.assertEqual(test.video_id, 123)
+            self.assertEqual(test.view_count, 123)
