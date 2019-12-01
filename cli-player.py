@@ -7,9 +7,7 @@ from subprocess import Popen
 from colorama import Fore, init
 
 import twitch
-
-with open('abos.txt', 'r') as opened_file:
-    abos = opened_file.read()
+from abos import abos
 
 init(autoreset=True)
 n = 1
