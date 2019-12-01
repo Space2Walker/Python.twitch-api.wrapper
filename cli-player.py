@@ -7,7 +7,9 @@ from subprocess import Popen
 from colorama import Fore, init
 
 import twitch
-from abos import abos
+
+with open('abos.txt', 'r') as opened_file:
+    abos = opened_file.read()
 
 init(autoreset=True)
 n = 1
@@ -27,10 +29,8 @@ for user in index:
 
     if user.type != "offline":
         print(str(n) + ".")
-        print(Fore.GREEN + user.user_name)
+        print(Fore.GREEN + user.name)
         print(user.title)
-    else:
-        print(Fore.RED + user.user_name)
 
     n += 1
 
@@ -38,8 +38,8 @@ for user in index:
 choice = int(input("Number ?")) - 1
 
 # play stream
-url = 'twitch.tv/' + str(index[choice].user_name)
-stream = twitch.get_hls(url, '720p')
+url = 'twitch.tv/' + str(index[choice].name)
+stream = twitch.get_hls(url, 'best')
 
 command = ['vlc', stream, '--meta-title', index[choice].title]
 

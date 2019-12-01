@@ -41,6 +41,17 @@ class TestTwitchFunctions(unittest.TestCase):
             mocked_api.assert_called_with('streams?user_login=gronkh&user_login=lastmiles&user_id=49112900')
             # test response but i don't get it
             self.assertEqual(str(test)[:22], "[<twitch.Stream object")
+            self.assertEqual(test[0].user_id, 123)
+            self.assertEqual(test[0].name, 'Gronkh')
+            self.assertEqual(test[0].stream_id, 123)
+            self.assertEqual(test[0].game_id, 123)
+            self.assertEqual(test[0].type, 'foo')
+            self.assertEqual(test[0].title, 'foo')
+            self.assertEqual(test[0].viewers, 123)
+            self.assertEqual(test[0].started_at, 'foo')
+            self.assertEqual(test[0].language, 'foo')
+            self.assertEqual(test[0].thumbnail_url, 'foo')
+            self.assertEqual(test[0].tag_ids, 'foo')
 
             # test Vod
             test = twitch.search("VIDEOS", user_login=['gronkh', 'lastmiles'], user_id=49112900)

@@ -239,27 +239,28 @@ class Stream(Streamer):
             self.stream_data = call_api(f"streams?user_id={self.user_id}")
 
             try:
-                self.stream_id = self.stream_data['data'][0]['id']
-                self.game_id = self.stream_data['data'][0]['game_id']
+                self.stream_id = int(self.stream_data['data'][0]['id'])
+                self.game_id = int(self.stream_data['data'][0]['game_id'])
                 self.type = self.stream_data['data'][0]['type']
                 self.title = self.stream_data['data'][0]['title']
-                self.viewers = self.stream_data['data'][0]['viewer_count']
+                self.viewers = int(self.stream_data['data'][0]['viewer_count'])
                 self.started_at = self.stream_data['data'][0]['started_at']
                 self.language = self.stream_data['data'][0]['language']
                 self.thumbnail_url = self.stream_data['data'][0]['thumbnail_url']
                 self.tag_ids = self.stream_data['data'][0]['tag_ids']
 
-            except IndexError:
+            except (IndexError, KeyError):
                 self.type = "offline"
 
         if not self_init:
-            self.user_id = kwargs['user_id']
-            self.user_name = kwargs['user_name']
-            self.stream_id = kwargs['id']
-            self.game_id = kwargs['game_id']
+            self.user_id = int(kwargs['user_id'])
+            self.name = kwargs['user_name']
+            self.url = 'twitch.tv/' + self.name
+            self.stream_id = int(kwargs['id'])
+            self.game_id = int(kwargs['game_id'])
             self.type = kwargs['type']
             self.title = kwargs['title']
-            self.viewers = kwargs['viewer_count']
+            self.viewers = int(kwargs['viewer_count'])
             self.started_at = kwargs['started_at']
             self.language = kwargs['language']
             self.thumbnail_url = kwargs['thumbnail_url']
@@ -279,7 +280,7 @@ class Vod:
 
         - .vod_id: The VOD ID
         - .user_id: The User ID, whitley used in the API
-        - .user_name: The capitalized Streamer Name
+        - .name: The capitalized Streamer Name
         - .url: twitch.tv/videos/vod_id
         - .title: The Stream Title
         - .description: The VOD Description
@@ -313,9 +314,9 @@ class Vod:
             self.duration = self.vod_data['duration']
 
         if not self_init:
-            self.vod_id = vod_id
-            self.user_id = kwargs['user_id']
-            self.user_name = kwargs['user_name']
+            self.vod_id = int(vod_id)
+            self.user_id = int(kwargs['user_id'])
+            self.name = kwargs['user_name']
             self.url = kwargs['url']
             self.title = kwargs['title']
             self.description = kwargs['description']
@@ -323,7 +324,7 @@ class Vod:
             self.published_at = kwargs['published_at']
             self.thumbnail_url = kwargs['thumbnail_url']
             self.viewable = kwargs['viewable']
-            self.view_count = kwargs['view_count']
+            self.view_count = int(kwargs['view_count'])
             self.language = kwargs['language']
             self.type = kwargs['type']
             self.duration = kwargs['duration']
@@ -334,7 +335,7 @@ class Clip:
         """ The Clip Class
 
         .user_id        User ID of the stream from which the clip was created.
-        .user_name      Display name corresponding to user_id.
+        .name      Display name corresponding to user_id.
         .created_at     Date when the clip was created.
         .creator_id	    ID of the user who created the clip.
         .creator_name   Display name corresponding to creator_id.
@@ -351,7 +352,7 @@ class Clip:
         if self_init:
             self.clip_data = call_api(f"clips?id={clip_id}")['data'][0]
 
-            self.clip_id = clip_id
+            self.clip_id = int(clip_id)
             self.user_id = int(self.clip_data['broadcaster_id'])
             self.name = self.clip_data['broadcaster_name']
             self.created_at = self.clip_data['created_at']
@@ -367,20 +368,20 @@ class Clip:
             self.view_count = int(self.clip_data['view_count'])
 
         if not self_init:
-            self.clip_id = clip_id
-            self.user_id = kwargs['broadcaster_id']
+            self.clip_id = int(clip_id)
+            self.user_id = int(kwargs['broadcaster_id'])
             self.user_name = kwargs['broadcaster_name']
             self.created_at = kwargs['created_at']
-            self.creator_id = kwargs['creator_id']
+            self.creator_id = int(kwargs['creator_id'])
             self.creator_name = kwargs['creator_name']
             self.embed_url = kwargs['embed_url']
-            self.game_id = kwargs['game_id']
+            self.game_id = int(kwargs['game_id'])
             self.language = kwargs['language']
             self.thumbnail_url = kwargs['thumbnail_url']
             self.title = kwargs['title']
             self.url = kwargs['url']
-            self.video_id = kwargs['video_id']
-            self.view_count = kwargs['view_count']
+            self.video_id = int(kwargs['video_id'])
+            self.view_count = int(kwargs['view_count'])
 
 
 # Aliases
