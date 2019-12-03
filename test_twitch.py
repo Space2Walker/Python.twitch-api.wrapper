@@ -65,11 +65,6 @@ class TestTwitchFunctions(unittest.TestCase):
             # test response but i don't get it
             self.assertEqual(str(test)[:20], "[<twitch.Clip object")
 
-    def test_get_hls(self):
-        with patch('twitch.streamlink.streams') as mocked_streamlink:
-            mocked_streamlink.return_value.url.return_value = {'best': 'bar'}
-            test = twitch.get_hls('twitch.tv/gronkh')
-            self.assertEqual(str(test)[:45], "<MagicMock name='streams().__getitem__().url'")
 
     def test_get_game(self):
         with patch('twitch.call_api') as mocked_api:

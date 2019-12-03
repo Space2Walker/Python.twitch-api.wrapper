@@ -21,7 +21,6 @@ Classes:
 
 """
 import requests
-import streamlink
 
 from helper import kwargs_to_query
 
@@ -86,21 +85,6 @@ def search(identifier, **kwargs):
         for e in res:
             ret.append(Clip(e['id'], self_init=False, **e))
         return ret
-
-
-def get_hls(url, res='best'):
-    """
-    Crawls the HLS Url
-    :param url: The Twitch video or Stream Url
-    :type url: str
-    :param res: 720p, 1080p and so on
-    :type res: str
-    :return: The HLS URL
-    :rtype; str
-    """
-    # todo split into two functions and try do remove streamlink dependency
-    streams = streamlink.streams(url)
-    return streams[res].url
 
 
 def get_game(**kwargs):
