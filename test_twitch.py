@@ -65,7 +65,6 @@ class TestTwitchFunctions(unittest.TestCase):
             # test response but i don't get it
             self.assertEqual(str(test)[:20], "[<twitch.Clip object")
 
-
     def test_get_game(self):
         with patch('twitch.call_api') as mocked_api:
             mocked_api.return_value = mock_data
