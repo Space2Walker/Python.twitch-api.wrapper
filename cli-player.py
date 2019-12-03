@@ -2,6 +2,8 @@
 # author: Space2Walker
 # 2019-09-12
 
+
+import argparse
 from subprocess import Popen
 
 from colorama import Fore, init
@@ -9,10 +11,7 @@ from colorama import Fore, init
 import twitch
 from abos import abos
 
-init(autoreset=True)
-n = 1
-
-index = twitch.search('STREAMS', user_login=abos)
+site = "https://twitch.tv/"
 
 
 # sorting
@@ -20,25 +19,48 @@ def sortkey(val):
     return val.type
 
 
-index.sort(key=sortkey, reverse=False)
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '--play', help='Plays the Stream of a given user', type=str)
 
-# display results
-for user in index:
+    args = parser.parse_args()
+    if args.play:
+        url = site + args.play
+        command = ['streamlink', url, 'best']
+        Popen(command)
 
-    if user.type != "offline":
-        print(str(n) + ".")
-        print(Fore.GREEN + user.name)
-        print(user.title)
+    else:
+        choice()
 
-    n += 1
 
-# get choice
-choice = int(input("Number ?")) - 1
+def choice():
+    init(autoreset=True)
+    n = 1
+    index = twitch.search('STREAMS', user_login=abos)
 
-# play stream
-url = 'twitch.tv/' + str(index[choice].name)
-stream = twitch.get_hls(url, 'best')
+    index.sort(key=sortkey, reverse=False)
 
-command = ['vlc', stream, '--meta-title', index[choice].title]
+    # display results
+    for user in index:
 
-Popen(command)
+        if user.type != "offline":
+            print(str(n) + ".")
+            print(Fore.GREEN + user.name)
+            print(user.title)
+
+        n += 1
+
+    # get choice
+    choice = int(input("Number ?")) - 1
+
+    # play stream
+    url = 'twitch.tv/' + str(index[choice].name)
+    stream = twitch.get_hls(url, 'best')
+
+    command = ['vlc', stream, '--meta-title', index[choice].title]
+
+    Popen(command)
+
+
+if __name__ == '__main__':
+    main()
