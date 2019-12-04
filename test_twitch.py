@@ -18,17 +18,22 @@ mock_data = {'total': '23', 'data': [{'user_id': '123', 'broadcaster_id': '123',
 
 class TestTwitchFunctions(unittest.TestCase):
     def test_call_api(self):
-        with patch('requests.get') as mocked_get:
+        with patch('json.loads') as mocked_get:
             # GOOD Request
-            mocked_get.return_value.json.return_value = {"data": "foo"}
+            mocked_get.return_value = {"data": [1, 2]}
             # test request parameter
             test = twitch.call_api('streams?user_login=gronkh')
-            mocked_get.assert_called_with((twitch.api + 'streams?user_login=gronkh'), headers=twitch.headers)
+            mocked_get.assert_called_with('{"data":[],"pagination":{}}')
             # test response
-            self.assertEqual(test, {'data': 'foo'})
+            self.assertEqual(test, {"data": [1, 2]})
+
+            # Empty Answer
+            mocked_get.return_value = {"data": []}
+            with self.assertRaises(Exception):
+                twitch.call_api('streams?user_login=gronkh')
 
             # BAD Request
-            mocked_get.return_value.json.return_value = {"bar": "foo"}
+            mocked_get.return_value = {"bar": "foo"}
             with self.assertRaises(Exception):
                 twitch.call_api('streams?user_login=gronkh')
 

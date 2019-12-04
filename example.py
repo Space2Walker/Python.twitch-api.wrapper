@@ -1,5 +1,8 @@
 import twitch
 
+call = twitch.call_api('streams?user_login=gronkh')
+print(call)
+
 #####################################################
 #                  get extensions                   #
 #####################################################
@@ -28,11 +31,11 @@ for stream in test:
 #####################################################
 #           Iterate over all Followers             #
 #####################################################
-
+"""
 follow_gen = twitch.Streamer('lastmiles').follows('FROM', first=100)
 for e in follow_gen:
     print(e)
-
+"""
 
 
 #####################################################

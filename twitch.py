@@ -20,7 +20,8 @@ Classes:
 
 
 """
-import requests
+import json
+import urllib.request
 
 from helper import kwargs_to_query
 
@@ -37,13 +38,19 @@ def call_api(uri):
     """
     # todo better error handling, rate limiting and removing requests
 
-    response = requests.get(api + uri, headers=headers).json()
+    req = urllib.request.Request(api + uri, headers=headers)
+    with urllib.request.urlopen(req) as response:
+        data = response.read()
+    response = json.loads(data.decode("utf-8"))
+
     try:
+        if len(response['data']) == 0:
+            raise Exception("NO DATA Your request didn't get any data back")
         if response['data']:
             return response
 
     except KeyError:
-        raise Exception("NO DATA Your request didn't get any data back")
+        raise Exception("NO Response")
 
 
 def search(identifier, **kwargs):
