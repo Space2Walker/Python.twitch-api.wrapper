@@ -12,31 +12,45 @@ from abos import abos
 gi.require_version('Notify', '0.7')
 # noinspection PyUnresolvedReferences
 from gi.repository import Notify
+
 Notify.init("Twitch")
 
 # val setting
-last_index = []
+last_index = {}
 first_round = True
+
+
+# notify helper
+def show_notification(name, title):
+    _notification = Notify.Notification.new(name, title, "/home/lord/Documents/Twitch/twitch.png")
+    _notification.show()
+    return
+
 
 # run forever
 while True:
 
     # get data
-    index = twitch.search('STREAMS', user_login=abos)
+    index = twitch.search('STREAMS', dicta=True, user_login=abos)
 
     if first_round:
-        for user in index:
-            notification = Notify.Notification.new(user.name, user.title, "/home/lord/Documents/Twitch/twitch.png")
-            notification.show()
+        for key, value in index.items():
+            show_notification(value.name, value.title)
 
     # todo must check if we compare the same streamer maybe by id
     # iterate over data an compare to last data
     if not first_round:
-        # zip new and old index together
-        for new, last in zip(index, last_index):
+        for key, new in index.items():
+            last = None
+
+            # there is now last wit that id so it must be new
+            try:
+                last = last_index[key]
+            except KeyError:
+                show_notification(new.name, new.title)
+
             if (last.title != new.title) or (last.game_id != new.game_id):
-                notification = Notify.Notification.new(new.name, new.title, "/home/lord/Documents/Twitch/twitch.png")
-                notification.show()
+                show_notification(new.name, new.title)
 
     # copy last data and set 2nd run flag then wait
     last_index = index

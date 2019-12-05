@@ -69,8 +69,8 @@ def search(identifier, dicta=False, **kwargs):
     :return: Stream Class Object or list of Objects
     :rtype: collections.defaultlist or Stream
     """
-    ret = []
-
+    return_list = []
+    return_dict = {}
     # stick to your naming convention twitch for god sake
     if identifier.upper() == 'CLIPS':
         # renames the dict Key
@@ -84,21 +84,24 @@ def search(identifier, dicta=False, **kwargs):
         for e in res:
             data = Stream(e['user_name'], self_init=False, **e)
             if dicta:
-                ret.append({data.user_id: data})
+                return_dict[data.user_id] = data
             if not dicta:
-                ret.append(data)
+                return_list.append(data)
 
-        return ret
+        if dicta:
+            return return_dict
+        else:
+            return return_list
 
     if identifier.upper() == 'VIDEOS':
         for e in res:
-            ret.append(Vod(e['id'], self_init=False, **e))
-        return ret
+            return_list.append(Vod(e['id'], self_init=False, **e))
+        return return_list
 
     if identifier.upper() == 'CLIPS':
         for e in res:
-            ret.append(Clip(e['id'], self_init=False, **e))
-        return ret
+            return_list.append(Clip(e['id'], self_init=False, **e))
+        return return_list
 
 
 def get_game(**kwargs):
