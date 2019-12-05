@@ -20,6 +20,7 @@ first_round = True
 
 # run forever
 while True:
+
     # get data
     index = twitch.search('STREAMS', user_login=abos)
 
@@ -28,6 +29,7 @@ while True:
             notification = Notify.Notification.new(user.name, user.title, "/home/lord/Documents/Twitch/twitch.png")
             notification.show()
 
+    # todo must check if we compare the same streamer maybe by id
     # iterate over data an compare to last data
     if not first_round:
         # zip new and old index together
