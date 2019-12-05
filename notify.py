@@ -34,23 +34,23 @@ while True:
     index = twitch.search('STREAMS', dicta=True, user_login=abos)
 
     if first_round:
-        for key, value in index.items():
-            show_notification(value.name, value.title)
+        for user_id, stream in index.items():
+            show_notification(stream.name, stream.title)
 
     # todo must check if we compare the same streamer maybe by id
     # iterate over data an compare to last data
     if not first_round:
-        for key, new in index.items():
+        for user_id, stream in index.items():
             last = None
 
             # there is now last wit that id so it must be new
             try:
-                last = last_index[key]
+                last = last_index[user_id]
             except KeyError:
-                show_notification(new.name, new.title)
+                show_notification(stream.name, stream.title)
 
-            if (last.title != new.title) or (last.game_id != new.game_id):
-                show_notification(new.name, new.title)
+            if (last.title != stream.title) or (last.game_id != stream.game_id):
+                show_notification(stream.name, stream.title)
 
     # copy last data and set 2nd run flag then wait
     last_index = index

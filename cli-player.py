@@ -47,6 +47,7 @@ def display(index, typ='stream'):
     try:
         user_input = int(input("Number ?")) - 1
     except KeyboardInterrupt:
+        print('\n')
         exit()
 
     return user_input
