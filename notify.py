@@ -3,35 +3,56 @@
 # 2019-09-12
 import time
 
-# noinspection PyUnresolvedReferences
 import gi
 
 import twitch
 from abos import abos
 
+# Notify setup
 gi.require_version('Notify', '0.7')
 # noinspection PyUnresolvedReferences
 from gi.repository import Notify
 
 Notify.init("Twitch")
 
-last_index = []
-second_run = 0
+# val setting
+last_index = {}
+first_round = True
 
+
+# notify helper
+def show_notification(name, title):
+    _notification = Notify.Notification.new(name, title, "/home/lord/Documents/Twitch/twitch.png")
+    _notification.show()
+    return
+
+
+# run forever
 while True:
-    n = 0
-    index = twitch.search('STREAMS', user_login=abos)
 
-    for user in index:
-        if second_run:
-            if last_index[n].title != user.title or last_index[n].game_id != user.game_id:
-                Hello = Notify.Notification.new(user.name, user.title, "/home/lord/Documents/Twitch/twitch.png")
-                Hello.show()
-        else:
-            Hello = Notify.Notification.new(user.name, user.title, "/home/lord/Documents/Twitch/twitch.png")
-            Hello.show()
-        n += 1
+    # get data
+    index = twitch.search('STREAMS', dicta=True, user_login=abos)
 
+    if first_round:
+        for key, value in index.items():
+            show_notification(value.name, value.title)
+
+    # todo must check if we compare the same streamer maybe by id
+    # iterate over data an compare to last data
+    if not first_round:
+        for key, new in index.items():
+            last = None
+
+            # there is now last wit that id so it must be new
+            try:
+                last = last_index[key]
+            except KeyError:
+                show_notification(new.name, new.title)
+
+            if (last.title != new.title) or (last.game_id != new.game_id):
+                show_notification(new.name, new.title)
+
+    # copy last data and set 2nd run flag then wait
     last_index = index
-    second_run = 1
+    first_round = False
     time.sleep(300)

@@ -53,13 +53,15 @@ def call_api(uri):
         raise Exception("NO Response")
 
 
-def search(identifier, **kwargs):
+def search(identifier, dicta=False, **kwargs):
     """
     Full Doc Compatible See
     https://dev.twitch.tv/docs/api/reference/#get-streams
     https://dev.twitch.tv/docs/api/reference/#get-videos
     https://dev.twitch.tv/docs/api/reference/#get-clips
 
+    :param dicta: if true returns the result in a dict with user_id as key
+    :type dicta: bool
     :param identifier: 'STREAMS' OR 'VIDEOS' OR 'CLIP'
     :type identifier: str
     :param kwargs: user_login=['gronkh', 'lastmiles'], user_id=[49112900]
@@ -67,8 +69,8 @@ def search(identifier, **kwargs):
     :return: Stream Class Object or list of Objects
     :rtype: collections.defaultlist or Stream
     """
-    ret = []
-
+    return_list = []
+    return_dict = {}
     # stick to your naming convention twitch for god sake
     if identifier.upper() == 'CLIPS':
         # renames the dict Key
@@ -80,18 +82,26 @@ def search(identifier, **kwargs):
     # convert api return to class
     if identifier.upper() == 'STREAMS':
         for e in res:
-            ret.append(Stream(e['user_name'], self_init=False, **e))
-        return ret
+            data = Stream(e['user_name'], self_init=False, **e)
+            if dicta:
+                return_dict[data.user_id] = data
+            if not dicta:
+                return_list.append(data)
+
+        if dicta:
+            return return_dict
+        else:
+            return return_list
 
     if identifier.upper() == 'VIDEOS':
         for e in res:
-            ret.append(Vod(e['id'], self_init=False, **e))
-        return ret
+            return_list.append(Vod(e['id'], self_init=False, **e))
+        return return_list
 
     if identifier.upper() == 'CLIPS':
         for e in res:
-            ret.append(Clip(e['id'], self_init=False, **e))
-        return ret
+            return_list.append(Clip(e['id'], self_init=False, **e))
+        return return_list
 
 
 def get_game(**kwargs):
