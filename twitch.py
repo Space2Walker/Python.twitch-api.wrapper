@@ -53,13 +53,15 @@ def call_api(uri):
         raise Exception("NO Response")
 
 
-def search(identifier, **kwargs):
+def search(identifier, dicta=False, **kwargs):
     """
     Full Doc Compatible See
     https://dev.twitch.tv/docs/api/reference/#get-streams
     https://dev.twitch.tv/docs/api/reference/#get-videos
     https://dev.twitch.tv/docs/api/reference/#get-clips
 
+    :param dicta: if true returns the result in a dict with user_id as key
+    :type dicta: bool
     :param identifier: 'STREAMS' OR 'VIDEOS' OR 'CLIP'
     :type identifier: str
     :param kwargs: user_login=['gronkh', 'lastmiles'], user_id=[49112900]
@@ -80,7 +82,12 @@ def search(identifier, **kwargs):
     # convert api return to class
     if identifier.upper() == 'STREAMS':
         for e in res:
-            ret.append(Stream(e['user_name'], self_init=False, **e))
+            data = Stream(e['user_name'], self_init=False, **e)
+            if dicta:
+                ret.append({data.user_id: data})
+            if not dicta:
+                ret.append(data)
+
         return ret
 
     if identifier.upper() == 'VIDEOS':
