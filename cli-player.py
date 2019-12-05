@@ -27,23 +27,22 @@ def main():
         vod(args.vod)
 
     else:
-        display()
+        stream()
 
 
-# sorting
-def sortkey(val):
-    return val.type
-
-
-# play with streamlink
-def play(url):
-    command = ['streamlink', url, 'best', '-Q']
-    Popen(command)
-
-
-# get choice
-def choice():
+# display options and get choice
+def display(index, typ='stream'):
+    init(autoreset=True)
     user_input = None
+
+    for n, val in enumerate(index, start=1):
+        print(str(n) + ".")
+        if typ == 'stream':
+            print(Fore.GREEN + val.name)
+            print(val.title)
+        if typ == 'vod':
+            print(Fore.GREEN + val.title)
+            print(val.duration)
 
     try:
         user_input = int(input("Number ?")) - 1
@@ -53,44 +52,36 @@ def choice():
     return user_input
 
 
+# play with streamlink
+def play(url):
+    command = ['streamlink', url, 'best', '-Q']
+    Popen(command)
+
+
+######################################
+#           Main Functions           #
+######################################
 def vod(user_name):
-    init(autoreset=True)
-    n = 1
+    # get data
     user_id = twitch.Streamer(user_name).user_id
     index = twitch.search('VIDEOS', user_id=user_id, first=10)
 
-    for vid in index:
-        print(str(n) + ".")
-        print(Fore.GREEN + vid.title)
-        print(vid.duration)
-        n += 1
+    # display options and get choice
+    user_input = display(index, typ='vod')
 
-    # get choice
-    user_input = choice()
-
+    # play
     url = str(index[user_input].url)
     play(url)
 
 
-# display online Streams from Abo`s
-def display():
-    init(autoreset=True)
-    n = 1
-
+def stream():
+    # get data
     index = twitch.search('STREAMS', user_login=abos)
 
-    index.sort(key=sortkey, reverse=False)
+    # display options and get choice
+    user_input = display(index, typ='stream')
 
-    # display results
-    for user in index:
-        print(str(n) + ".")
-        print(Fore.GREEN + user.name)
-        print(user.title)
-        n += 1
-
-    # get choice
-    user_input = choice()
-
+    # play
     url = site + str(index[user_input].name)
     play(url)
 
