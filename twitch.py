@@ -258,7 +258,13 @@ class Stream(Streamer):
             self.name = kwargs['user_name']
             self.url = 'twitch.tv/' + self.name
             self.stream_id = int(kwargs['id'])
-            self.game_id = int(kwargs['game_id'])
+
+            # sometimes there is no game id
+            if kwargs['game_id'] == '':
+                self.game_id = 0
+            else:
+                self.game_id = int(kwargs['game_id'])
+
             self.type = kwargs['type']
             self.title = kwargs['title']
             self.viewers = int(kwargs['viewer_count'])
