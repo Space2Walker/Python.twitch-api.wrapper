@@ -55,7 +55,7 @@ def display(index, typ='stream'):
 
 # play with streamlink
 def play(url):
-    command = ['streamlink', url, 'best', '-Q']
+    command = ['streamlink', url, 'best', '-Q', '-p', 'cvlc']
     Popen(command)
 
 
